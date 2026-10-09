@@ -1,334 +1,372 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import {
-  Heart,
-  Share2,
-  Bookmark,
-  Volume2,
-  VolumeX,
-  Play,
-  Pause,
-  Sparkles,
-  Crown,
   ChevronUp,
   ChevronDown,
-  Music,
-  Eye,
-  MessageCircle,
+  Loader2,
+  RefreshCw,
+  Sparkles,
+  Flame,
+  Crown,
 } from 'lucide-react';
-import { toast } from 'sonner';
-import { REELS_DATA } from '../data/mehndiData';
+import { fetchReels } from '../redux/slices/reelsSlice';
+import { ReelItem } from '../components/reels/ReelItem';
+import { ReelCommentsModal } from '../components/reels/ReelCommentsModal';
+import { ReelShareModal } from '../components/reels/ReelShareModal';
+import { ReelBookModal } from '../components/reels/ReelBookModal';
+import { AuthModal } from '../components/AuthModal';
 
 export const ReelsPage = ({ onBookLook }) => {
-  const [currentReelIndex, setCurrentReelIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const dispatch = useDispatch();
+  const { reels, loading, error } = useSelector((state) => state.reels);
+  const { user } = useSelector((state) => state.auth);
+
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
-  const [likedReels, setLikedReels] = useState({});
-  const [savedReels, setSavedReels] = useState({});
-  const [floatingHearts, setFloatingHearts] = useState([]);
+  // Active Tab: 'trending' or 'bridal'
+  const [activeTab, setActiveTab] = useState('trending');
 
-  const currentReel = REELS_DATA[currentReelIndex];
+  // Modal States
+  const [activeCommentsReel, setActiveCommentsReel] = useState(null);
+  const [activeShareReel, setActiveShareReel] = useState(null);
+  const [activeBookReel, setActiveBookReel] = useState(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-  const handleNextReel = () => {
-    setCurrentReelIndex((prev) => (prev + 1) % REELS_DATA.length);
-  };
+  // Transition Lock for ultra smooth 60fps sliding
+  const isTransitioning = useRef(false);
 
-  const handlePrevReel = () => {
-    setCurrentReelIndex((prev) => (prev - 1 + REELS_DATA.length) % REELS_DATA.length);
-  };
+  // Touch Swipe tracking
+  const touchStartY = useRef(0);
+  const touchEndY = useRef(0);
+  const lastScrollTime = useRef(0);
 
-  const handleToggleLike = (reelId) => {
-    const isLiked = !likedReels[reelId];
-    setLikedReels((prev) => ({ ...prev, [reelId]: isLiked }));
+  // Fetch Reels whenever activeTab changes
+  useEffect(() => {
+    dispatch(
+      fetchReels({
+        sort: 'trending',
+        tag: activeTab === 'bridal' ? 'bridal' : undefined,
+        page: 1,
+        limit: 20,
+      })
+    );
+    setCurrentIndex(0);
+  }, [dispatch, activeTab]);
 
-    if (isLiked) {
-      // Add floating heart
-      const id = Date.now();
-      setFloatingHearts((prev) => [...prev, id]);
+  // Navigate to Next Reel with smooth lock
+  const handleNextReel = useCallback(() => {
+    if (reels.length === 0 || isTransitioning.current) return;
+    if (currentIndex + 1 < reels.length) {
+      isTransitioning.current = true;
+      setCurrentIndex((prev) => prev + 1);
       setTimeout(() => {
-        setFloatingHearts((prev) => prev.filter((h) => h !== id));
-      }, 1000);
-      toast.success('Added to your liked reels! ❤️');
+        isTransitioning.current = false;
+      }, 380);
     }
+  }, [reels.length, currentIndex]);
+
+  // Navigate to Previous Reel with smooth lock
+  const handlePrevReel = useCallback(() => {
+    if (reels.length === 0 || isTransitioning.current) return;
+    if (currentIndex > 0) {
+      isTransitioning.current = true;
+      setCurrentIndex((prev) => prev - 1);
+      setTimeout(() => {
+        isTransitioning.current = false;
+      }, 380);
+    }
+  }, [reels.length, currentIndex]);
+
+  // Touch handlers for mobile swipe
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+    touchEndY.current = e.touches[0].clientY;
   };
 
-  const handleToggleSave = (reelId) => {
-    const isSaved = !savedReels[reelId];
-    setSavedReels((prev) => ({ ...prev, [reelId]: isSaved }));
-    if (isSaved) {
-      toast.success('Reel saved to inspiration board! ✨');
-    }
+  const handleTouchMove = (e) => {
+    touchEndY.current = e.touches[0].clientY;
   };
 
-  const handleShare = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.href);
-      toast.success('Reel link copied to share on Instagram & WhatsApp!');
+  const handleTouchEnd = () => {
+    if (touchStartY.current === 0 || touchEndY.current === 0) return;
+    const diff = touchStartY.current - touchEndY.current;
+    const SWIPE_THRESHOLD = 50;
+
+    if (diff > SWIPE_THRESHOLD) {
+      handleNextReel();
+    } else if (diff < -SWIPE_THRESHOLD) {
+      handlePrevReel();
     }
+    touchStartY.current = 0;
+    touchEndY.current = 0;
   };
+
+  // Mouse Wheel scroll support with throttle
+  const handleWheel = useCallback(
+    (e) => {
+      const now = Date.now();
+      if (now - lastScrollTime.current < 400) return;
+
+      if (Math.abs(e.deltaY) > 25) {
+        lastScrollTime.current = now;
+        if (e.deltaY > 0) {
+          handleNextReel();
+        } else {
+          handlePrevReel();
+        }
+      }
+    },
+    [handleNextReel, handlePrevReel]
+  );
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
+        return;
+      }
+
+      if (e.key === 'ArrowDown' || e.key === 'j') {
+        e.preventDefault();
+        handleNextReel();
+      } else if (e.key === 'ArrowUp' || e.key === 'k') {
+        e.preventDefault();
+        handlePrevReel();
+      } else if (e.key === 'm' || e.key === 'M') {
+        setIsMuted((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleNextReel, handlePrevReel]);
+
+  const containerRef = useRef(null);
+
+  // Prevent mobile pull-to-refresh gesture completely while allowing swipe
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleNativeTouchMove = (e) => {
+      // Prevents mobile Chrome/Safari pull-to-refresh on downward drag
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+    };
+
+    el.addEventListener('touchmove', handleNativeTouchMove, { passive: false });
+    return () => {
+      el.removeEventListener('touchmove', handleNativeTouchMove);
+    };
+  }, []);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8 pb-24">
-      {/* Header */}
-      <div className="text-center max-w-xl mx-auto mb-6 space-y-1">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#8A3324]/10 text-[#8A3324] text-xs font-bold uppercase tracking-wider">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Trending Henna Moments</span>
-        </div>
-        <h1 className="font-royal text-2xl sm:text-4xl font-bold text-[#4A151B]">
-          Art-BY-radhika Bridal Reels Feed
-        </h1>
-
-        <p className="text-xs sm:text-sm text-[#4A151B]/80">
-          Swipe through satisfying peels, live bride reactions, and intricate cone art piping.
-        </p>
-      </div>
-
-      {/* Reel Phone Container */}
-      <div className="relative max-w-sm sm:max-w-md mx-auto aspect-[9/16] rounded-3xl overflow-hidden shadow-2xl border-4 border-[#D4AF37]/50 bg-[#1A0D0E]">
-        {/* Animated Reel Canvas & Visualizer */}
-        <div
-          onClick={() => setIsPlaying(!isPlaying)}
-          className={`absolute inset-0 bg-gradient-to-b ${currentReel.gradient} flex items-center justify-center cursor-pointer select-none`}
-        >
-          {/* Decorative Henna Mandala Pattern in Background */}
-          <div className="absolute inset-0 opacity-20 pointer-events-none flex items-center justify-center">
-            <svg
-              className={`w-96 h-96 ${isPlaying ? 'animate-spin-slow' : ''}`}
-              viewBox="0 0 100 100"
-              fill="none"
-              stroke="#D4AF37"
-              strokeWidth="0.8"
+    <div
+      ref={containerRef}
+      onWheel={handleWheel}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      className="w-full h-[calc(100dvh-3.8rem)] md:h-[calc(100vh-4.5rem)] bg-black text-white flex items-center justify-center overflow-hidden select-none p-0 md:py-2 relative overscroll-none overscroll-y-none disable-pull-to-refresh"
+      style={{
+        overscrollBehavior: 'none',
+        overscrollBehaviorY: 'none',
+        touchAction: 'none',
+      }}
+    >
+      {/* Instagram Reel Main Container */}
+      <div className="relative w-full h-full md:max-w-[400px] md:aspect-[9/16] md:max-h-[84vh] bg-[#0A0506] md:rounded-3xl overflow-hidden md:border-2 md:border-[#D4AF37]/40 shadow-2xl flex items-center justify-center overscroll-none overscroll-y-none">
+        
+        {/* FIXED Top Floating Tab Switcher (Trending | Bridal) - Anchored at the top */}
+        <div className="absolute top-3 sm:top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-auto">
+          <div className="flex items-center gap-5 px-4 py-1.5 rounded-full bg-black/70 backdrop-blur-xl border border-white/15 shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
+            {/* Trending Tab */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveTab('trending');
+              }}
+              onTouchStart={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
+              className={`relative py-1 text-xs sm:text-sm font-bold tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'trending'
+                  ? 'text-white scale-105 drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]'
+                  : 'text-white/50 hover:text-white/80'
+              }`}
             >
-              <circle cx="50" cy="50" r="45" strokeDasharray="2,2" />
-              <circle cx="50" cy="50" r="35" />
-              <circle cx="50" cy="50" r="25" />
-              <path d="M50 5 Q55 25 50 50 Q45 25 50 5" />
-              <path d="M50 95 Q55 75 50 50 Q45 75 50 95" />
-              <path d="M5 50 Q25 55 50 50 Q25 45 5 50" />
-              <path d="M95 50 Q75 55 50 50 Q75 45 95 50" />
-              <circle cx="50" cy="50" r="8" fill="#D4AF37" fillOpacity="0.4" />
-            </svg>
+              <Flame className={`w-3.5 h-3.5 ${activeTab === 'trending' ? 'text-[#E25822]' : ''}`} />
+              <span>Trending</span>
+              {activeTab === 'trending' && (
+                <span className="absolute -bottom-1 inset-x-0 h-0.5 bg-gradient-to-r from-[#D4AF37] to-[#FFFDF9] rounded-full shadow-[0_0_8px_#D4AF37]" />
+              )}
+            </button>
+
+            <span className="w-px h-3.5 bg-white/20" />
+
+            {/* Bridal Tab */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveTab('bridal');
+              }}
+              onTouchStart={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
+              className={`relative py-1 text-xs sm:text-sm font-bold tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'bridal'
+                  ? 'text-white scale-105 drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]'
+                  : 'text-white/50 hover:text-white/80'
+              }`}
+            >
+              <Crown className={`w-3.5 h-3.5 ${activeTab === 'bridal' ? 'text-[#D4AF37]' : ''}`} />
+              <span>Bridal</span>
+              {activeTab === 'bridal' && (
+                <span className="absolute -bottom-1 inset-x-0 h-0.5 bg-gradient-to-r from-[#D4AF37] to-[#FFFDF9] rounded-full shadow-[0_0_8px_#D4AF37]" />
+              )}
+            </button>
           </div>
+        </div>
 
-          {/* Animated Visual Demonstration */}
-          <div className="relative text-center p-6 space-y-4 z-10 pointer-events-none">
-            {/* Visual Icon Badge */}
-            <div className="w-24 h-24 mx-auto rounded-full bg-black/40 backdrop-blur-md border-2 border-[#D4AF37] flex items-center justify-center text-[#D4AF37] shadow-xl">
-              {currentReel.videoType === 'peel' && (
-                <div className="text-center">
-                  <Sparkles className="w-10 h-10 animate-bounce mx-auto" />
-                  <span className="text-[10px] uppercase font-bold tracking-wider block mt-1">
-                    Peel Reveal
-                  </span>
-                </div>
-              )}
-              {currentReel.videoType === 'portrait' && (
-                <div className="text-center">
-                  <Crown className="w-10 h-10 mx-auto" />
-                  <span className="text-[10px] uppercase font-bold tracking-wider block mt-1">
-                    Portrait Art
-                  </span>
-                </div>
-              )}
-              {currentReel.videoType === 'arabic' && (
-                <div className="text-center">
-                  <Sparkles className="w-10 h-10 mx-auto" />
-                  <span className="text-[10px] uppercase font-bold tracking-wider block mt-1">
-                    Gulf Khafif
-                  </span>
-                </div>
-              )}
-              {currentReel.videoType === 'feet' && (
-                <div className="text-center">
-                  <Crown className="w-10 h-10 mx-auto" />
-                  <span className="text-[10px] uppercase font-bold tracking-wider block mt-1">
-                    Rajwada Feet
-                  </span>
-                </div>
-              )}
-              {currentReel.videoType === 'making' && (
-                <div className="text-center">
-                  <Sparkles className="w-10 h-10 mx-auto" />
-                  <span className="text-[10px] uppercase font-bold tracking-wider block mt-1">
-                    Organic Lab
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-1">
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#D4AF37] text-[#2A0C0E]">
-                {currentReel.views} Live Views
-              </span>
-              <p className="text-xs text-white/70 italic max-w-xs mx-auto pt-2">
-                Tap anywhere to {isPlaying ? 'pause' : 'resume'} preview
-              </p>
-            </div>
+        {/* Content Loading & Video Player */}
+        {loading && reels.length === 0 ? (
+          <div className="flex flex-col items-center justify-center text-center p-6 space-y-3 text-white">
+            <Loader2 className="w-10 h-10 animate-spin text-[#D4AF37]" />
+            <span className="font-royal text-base font-bold text-[#D4AF37]">
+              Loading Reels...
+            </span>
           </div>
-
-          {/* Pause Indicator overlay if paused */}
-          {!isPlaying && (
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center pointer-events-none">
-              <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
-                <Play className="w-8 h-8 fill-white ml-1" />
-              </div>
+        ) : error && reels.length === 0 ? (
+          <div className="flex flex-col items-center justify-center text-center p-6 space-y-3 text-white">
+            <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center text-red-400">
+              <Sparkles className="w-6 h-6" />
             </div>
-          )}
-
-          {/* Floating heart animations */}
-          {floatingHearts.map((id) => (
+            <h3 className="font-royal text-base font-bold">Unable to Load Reels</h3>
+            <button
+              onClick={() =>
+                dispatch(
+                  fetchReels({
+                    sort: 'trending',
+                    tag: activeTab === 'bridal' ? 'bridal' : undefined,
+                    page: 1,
+                    limit: 20,
+                  })
+                )
+              }
+              className="px-4 py-2 rounded-xl bg-[#D4AF37] text-[#2A0C0E] font-bold text-xs flex items-center gap-1.5 hover:brightness-110 cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Retry</span>
+            </button>
+          </div>
+        ) : reels.length === 0 ? (
+          <div className="flex flex-col items-center justify-center text-center p-6 space-y-3 text-white">
+            <Sparkles className="w-8 h-8 text-[#D4AF37]" />
+            <h3 className="font-royal text-base font-bold">No Reels Available</h3>
+            <button
+              onClick={() => setActiveTab('trending')}
+              className="px-4 py-2 rounded-xl bg-[#D4AF37] text-[#2A0C0E] font-bold text-xs cursor-pointer"
+            >
+              Back to Trending
+            </button>
+          </div>
+        ) : (
+          /* Smooth Hardware-Accelerated Vertical Sliding Reels Container */
+          <div className="w-full h-full relative overflow-hidden">
             <div
-              key={id}
-              className="absolute bottom-20 left-1/2 -translate-x-1/2 text-[#E63946] animate-in fade-in zoom-in-50 duration-700 pointer-events-none"
+              className="w-full h-full flex flex-col transform-gpu"
+              style={{
+                transform: `translate3d(0, -${currentIndex * 100}%, 0)`,
+                transition: 'transform 380ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+                willChange: 'transform',
+              }}
             >
-              <Heart className="w-20 h-20 fill-[#E63946] drop-shadow-lg" />
-            </div>
-          ))}
-        </div>
+              {reels.map((reel, idx) => {
+                const isActive = idx === currentIndex;
 
-        {/* Top Controls: Sound & Progress indicator */}
-        <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-20 pointer-events-auto">
-          {/* Reel dots */}
-          <div className="flex gap-1.5">
-            {REELS_DATA.map((_, i) => (
-              <span
-                key={i}
-                className={`h-1 rounded-full transition-all ${
-                  currentReelIndex === i ? 'w-6 bg-[#D4AF37]' : 'w-2 bg-white/40'
-                }`}
-              />
-            ))}
-          </div>
-
-          <button
-            onClick={() => setIsMuted(!isMuted)}
-            className="p-2 rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-black/60 transition-colors cursor-pointer"
-            aria-label="Toggle Sound"
-          >
-            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-          </button>
-        </div>
-
-        {/* Right Action Icons Column */}
-        <div className="absolute right-3 bottom-24 sm:bottom-28 z-20 flex flex-col items-center gap-4 text-white pointer-events-auto">
-          {/* Like Button */}
-          <div className="flex flex-col items-center gap-1">
-            <button
-              onClick={() => handleToggleLike(currentReel.id)}
-              className={`p-3 rounded-full backdrop-blur-md transition-transform active:scale-75 cursor-pointer ${
-                likedReels[currentReel.id]
-                  ? 'bg-[#E63946] text-white shadow-lg'
-                  : 'bg-black/40 text-white hover:bg-black/60'
-              }`}
-            >
-              <Heart
-                className={`w-6 h-6 ${likedReels[currentReel.id] ? 'fill-white' : ''}`}
-              />
-            </button>
-            <span className="text-[11px] font-bold">
-              {(currentReel.likes + (likedReels[currentReel.id] ? 1 : 0)).toLocaleString()}
-            </span>
-          </div>
-
-          {/* Bookmark / Save */}
-          <div className="flex flex-col items-center gap-1">
-            <button
-              onClick={() => handleToggleSave(currentReel.id)}
-              className={`p-3 rounded-full backdrop-blur-md transition-transform active:scale-75 cursor-pointer ${
-                savedReels[currentReel.id]
-                  ? 'bg-[#D4AF37] text-[#2A0C0E]'
-                  : 'bg-black/40 text-white hover:bg-black/60'
-              }`}
-            >
-              <Bookmark
-                className={`w-6 h-6 ${savedReels[currentReel.id] ? 'fill-[#2A0C0E]' : ''}`}
-              />
-            </button>
-            <span className="text-[11px] font-bold">Save</span>
-          </div>
-
-          {/* Share */}
-          <div className="flex flex-col items-center gap-1">
-            <button
-              onClick={handleShare}
-              className="p-3 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md transition-transform active:scale-75 cursor-pointer"
-            >
-              <Share2 className="w-6 h-6 text-white" />
-            </button>
-            <span className="text-[11px] font-bold">Share</span>
-          </div>
-
-          {/* Rotating Audio Disc */}
-          <div className="w-10 h-10 rounded-full border-2 border-[#D4AF37] bg-black/60 flex items-center justify-center mt-2 animate-spin-slow">
-            <Music className="w-4 h-4 text-[#D4AF37]" />
-          </div>
-        </div>
-
-        {/* Bottom Overlay Info & Book Look Button */}
-        <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 bg-gradient-to-t from-black via-black/80 to-transparent z-20 space-y-2 pointer-events-auto">
-          {/* Artist Profile Tag */}
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-[#D4AF37] text-[#2A0C0E] font-bold text-xs flex items-center justify-center">
-              R
+                return (
+                  <div key={reel._id} className="w-full h-full shrink-0 flex-none relative">
+                    <ReelItem
+                      reel={reel}
+                      isActive={isActive}
+                      isMuted={isMuted}
+                      onToggleMute={() => setIsMuted(!isMuted)}
+                      onOpenComments={(r) => setActiveCommentsReel(r)}
+                      onOpenShare={(r) => setActiveShareReel(r)}
+                      onBookDesign={(r) => setActiveBookReel(r)}
+                      onTagClick={(tag) => {
+                        if (tag.toLowerCase().includes('bridal')) {
+                          setActiveTab('bridal');
+                        }
+                      }}
+                      currentUser={user}
+                      onRequireAuth={() => setIsAuthModalOpen(true)}
+                    />
+                  </div>
+                );
+              })}
             </div>
 
-            <span className="font-royal font-bold text-xs sm:text-sm text-white">
-              {currentReel.artist}
-            </span>
-            <span className="px-2 py-0.5 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-[10px] font-bold">
-              Master Artist
-            </span>
+            {/* Desktop Navigation Floating Arrows */}
+            <div className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 flex-col gap-2 z-40 pointer-events-auto">
+              <button
+                onClick={handlePrevReel}
+                disabled={currentIndex === 0}
+                className="p-2 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-md transition-transform active:scale-90 cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed border border-white/10 shadow-lg"
+                title="Previous Reel"
+                aria-label="Previous reel"
+              >
+                <ChevronUp className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleNextReel}
+                disabled={currentIndex === reels.length - 1}
+                className="p-2 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-md transition-transform active:scale-90 cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed border border-white/10 shadow-lg"
+                title="Next Reel"
+                aria-label="Next reel"
+              >
+                <ChevronDown className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-
-          {/* Reel Title & Description */}
-          <h3 className="font-royal text-base sm:text-lg font-bold text-white leading-tight">
-            {currentReel.title}
-          </h3>
-          <p className="text-xs text-white/80 line-clamp-2 leading-relaxed">
-            {currentReel.description}
-          </p>
-
-          {/* Client Review Banner */}
-          <div className="p-2 rounded-xl bg-white/10 backdrop-blur-md border border-[#D4AF37]/30 text-[11px] text-[#D4AF37] italic">
-            {currentReel.clientReview}
-          </div>
-
-          {/* Audio track info */}
-          <div className="flex items-center gap-2 text-[11px] text-white/70 overflow-hidden">
-            <Music className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
-            <span className="truncate">{currentReel.soundTrack}</span>
-          </div>
-
-          {/* Book Look Action */}
-          <div className="pt-1">
-            <button
-              onClick={() => onBookLook(currentReel)}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#E2C45E] to-[#B38F24] text-[#2A0C0E] font-bold text-xs sm:text-sm shadow-lg hover:brightness-110 transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Crown className="w-4 h-4" />
-              <span>Book This Exact Look</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Up / Down Navigation Buttons */}
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-20 pointer-events-auto">
-          <button
-            onClick={handlePrevReel}
-            className="p-2 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-md cursor-pointer transition-colors"
-            title="Previous Reel"
-          >
-            <ChevronUp className="w-4 h-4" />
-          </button>
-          <button
-            onClick={handleNextReel}
-            className="p-2 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-md cursor-pointer transition-colors"
-            title="Next Reel"
-          >
-            <ChevronDown className="w-4 h-4" />
-          </button>
-        </div>
+        )}
       </div>
+
+      {/* Reel Comments Drawer */}
+      <ReelCommentsModal
+        isOpen={!!activeCommentsReel}
+        onClose={() => setActiveCommentsReel(null)}
+        reelId={activeCommentsReel?._id}
+        reelTitle={activeCommentsReel?.title}
+        currentUser={user}
+        onRequireAuth={() => setIsAuthModalOpen(true)}
+      />
+
+      {/* Reel Share Sheet (WhatsApp & Instagram & Copy) */}
+      <ReelShareModal
+        isOpen={!!activeShareReel}
+        onClose={() => setActiveShareReel(null)}
+        reel={activeShareReel}
+      />
+
+      {/* Reel Direct Booking Modal */}
+      <ReelBookModal
+        isOpen={!!activeBookReel}
+        onClose={() => setActiveBookReel(null)}
+        reel={activeBookReel}
+        currentUser={user}
+        onRequireAuth={() => setIsAuthModalOpen(true)}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={() => {
+          setIsAuthModalOpen(false);
+        }}
+      />
     </div>
   );
 };
+
+export default ReelsPage;

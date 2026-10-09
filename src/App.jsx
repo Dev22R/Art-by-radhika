@@ -119,9 +119,14 @@ function App() {
 
   const isAddAddressPage =
     location.pathname.startsWith('/add') || location.pathname.includes('add/address');
+  const isReelsPage = location.pathname.startsWith('/reels');
 
   return (
-    <div className="min-h-screen bg-[#FAF6F0] text-[#2C1810] flex flex-col font-sans relative selection:bg-[#722F37] selection:text-[#FAF6F0]">
+    <div
+      className={`${
+        isReelsPage ? 'h-[100dvh] overflow-hidden bg-black text-white' : 'min-h-screen bg-[#FAF6F0] text-[#2C1810]'
+      } flex flex-col font-sans relative selection:bg-[#722F37] selection:text-[#FAF6F0]`}
+    >
       {/* Sonner Toast Notification Provider (Royal Customized UI) */}
       <Toaster
         position="top-center"
@@ -131,15 +136,17 @@ function App() {
         theme="light"
       />
 
-      {/* Top Desktop/Tablet Navbar */}
-      <Navbar
-        onOpenEnquiry={handleGeneralEnquiry}
-        onOpenAuth={() => setIsAuthOpen(true)}
-        favoritesCount={favorites.length}
-      />
+      {/* Top Desktop/Tablet Navbar (Hidden on mobile when in Reels mode for full immersion) */}
+      <div className={isReelsPage ? 'hidden md:block' : ''}>
+        <Navbar
+          onOpenEnquiry={handleGeneralEnquiry}
+          onOpenAuth={() => setIsAuthOpen(true)}
+          favoritesCount={favorites.length}
+        />
+      </div>
 
       {/* Main Content Area with React Router Routes */}
-      <main className="flex-1 pt-18 sm:pt-20">
+      <main className={isReelsPage ? 'flex-1 bg-black flex flex-col pt-0 md:pt-16' : 'flex-1 pt-18 sm:pt-20'}>
         <Routes>
           <Route
             path="/"
@@ -199,10 +206,10 @@ function App() {
         </Routes>
       </main>
 
-      {/* Floating Contact Enquiry Button (Shown on all pages; on /profile only after login; hidden on /add/address) */}
-      {(!location.pathname.startsWith('/profile') || isAuthenticated) && !isAddAddressPage && (
-        <FloatingEnquiryBtn onClick={handleGeneralEnquiry} />
-      )}
+      {/* Floating Contact Enquiry Button (Hidden on /profile when logged out, on /add/address, and on /reels page) */}
+      {(!location.pathname.startsWith('/profile') || isAuthenticated) &&
+        !isAddAddressPage &&
+        !isReelsPage && <FloatingEnquiryBtn onClick={handleGeneralEnquiry} />}
 
       {/* Mobile Modern Bottom Navigation Bar (Hidden on /add/address page) */}
       {!isAddAddressPage && <BottomNavbar />}
@@ -241,8 +248,8 @@ function App() {
         onClose={() => setIsLogoutModalOpen(false)}
       />
 
-      {/* Royal Footer (Hidden on Add Address Page) */}
-      {!isAddAddressPage && (
+      {/* Royal Footer (Hidden on Add Address Page and Reels Page) */}
+      {!isAddAddressPage && !isReelsPage && (
         <footer className="bg-[#2A0C0E] text-[#FFFDF9] pt-12 pb-24 md:pb-12 border-t-2 border-[#D4AF37]/40 relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">

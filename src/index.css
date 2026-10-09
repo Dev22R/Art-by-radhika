@@ -63,6 +63,17 @@
   scrollbar-width: none;
 }
 
+/* Disable native pull-to-refresh on mobile reels for native app experience */
+.disable-pull-to-refresh {
+  overscroll-behavior: none !important;
+  overscroll-behavior-y: none !important;
+  touch-action: none !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Glassmorphism & Henna Glow */
 .glass-royal {
   background: rgba(255, 253, 249, 0.85);

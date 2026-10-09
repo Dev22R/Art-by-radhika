@@ -103,4 +103,52 @@ export const addressService = {
   },
 };
 
+// Reels Service Endpoints
+export const reelsService = {
+  getReels: async (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.sort) query.append('sort', params.sort);
+    if (params.tag) query.append('tag', params.tag);
+    if (params.page) query.append('page', params.page);
+    if (params.limit) query.append('limit', params.limit);
+    const queryString = query.toString();
+    const url = `/reels${queryString ? `?${queryString}` : ''}`;
+    const response = await api.get(url);
+    return response.data;
+  },
+  likeReel: async (reelId) => {
+    const response = await api.post(`/reels/${reelId}/like`);
+    return response.data;
+  },
+  shareReel: async (reelId, platform = 'whatsapp') => {
+    const response = await api.post(`/reels/${reelId}/share`, { platform });
+    return response.data;
+  },
+  getComments: async (reelId, params = { page: 1, limit: 20 }) => {
+    const query = new URLSearchParams();
+    if (params.page) query.append('page', params.page);
+    if (params.limit) query.append('limit', params.limit);
+    const queryString = query.toString();
+    const url = `/reels/${reelId}/comments${queryString ? `?${queryString}` : ''}`;
+    const response = await api.get(url);
+    return response.data;
+  },
+  addComment: async (reelId, text) => {
+    const response = await api.post(`/reels/${reelId}/comments`, { text });
+    return response.data;
+  },
+  deleteComment: async (reelId, commentId) => {
+    const response = await api.delete(`/reels/${reelId}/comments/${commentId}`);
+    return response.data;
+  },
+  bookReelDesign: async (reelId, bookingData) => {
+    const response = await api.post(`/reels/${reelId}/book`, bookingData);
+    return response.data;
+  },
+  trackView: async (reelId, watchDuration) => {
+    const response = await api.post(`/reels/${reelId}/view`, { watchDuration });
+    return response.data;
+  },
+};
+
 export default api;
