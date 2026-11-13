@@ -41,14 +41,14 @@ export const DesignModal = ({ design, isOpen, onClose, onBookDesign, isLiked, on
           <div className="absolute top-4 left-4">
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#FAF6F0]/90 text-[#4A151B] backdrop-blur-sm border border-[#D4AF37]/40 shadow-sm flex items-center gap-1">
               <Crown className="w-3.5 h-3.5 text-[#D4AF37]" />
-              {design.style}
+              {design.style || design.categoryName || 'Bridal Henna'}
             </span>
           </div>
 
           {/* Like & Share Action overlay */}
           <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
             <button
-              onClick={() => onToggleLike(design.id)}
+              onClick={() => onToggleLike(design.id || design._id)}
               className={`p-2.5 rounded-full backdrop-blur-md transition-transform active:scale-90 flex items-center gap-1.5 cursor-pointer ${
                 isLiked
                   ? 'bg-[#E63946] text-white shadow-lg'
@@ -56,7 +56,7 @@ export const DesignModal = ({ design, isOpen, onClose, onBookDesign, isLiked, on
               }`}
             >
               <Heart className={`w-4 h-4 ${isLiked ? 'fill-white' : ''}`} />
-              <span className="text-xs font-bold">{design.likes + (isLiked ? 1 : 0)}</span>
+              <span className="text-xs font-bold">{(design.likes || 0) + (isLiked ? 1 : 0)}</span>
             </button>
 
             <button
@@ -74,9 +74,13 @@ export const DesignModal = ({ design, isOpen, onClose, onBookDesign, isLiked, on
           <div className="space-y-4">
             <div>
               <div className="flex items-center gap-2 text-xs font-bold text-[#8A3324] uppercase tracking-wider mb-1">
-                <span>{design.category} Collection</span>
-                <span>•</span>
-                <span className="text-[#D4AF37] font-semibold">{design.complexity}</span>
+                <span>{design.categoryName || design.category || 'Bridal'} Collection</span>
+                {design.complexity && (
+                  <>
+                    <span>•</span>
+                    <span className="text-[#D4AF37] font-semibold">{design.complexity}</span>
+                  </>
+                )}
               </div>
               <h3 className="font-royal text-2xl font-bold text-[#4A151B] leading-tight">
                 {design.title}
@@ -93,7 +97,7 @@ export const DesignModal = ({ design, isOpen, onClose, onBookDesign, isLiked, on
                 <Clock className="w-4 h-4 text-[#8A3324]" />
                 <div>
                   <div className="text-[10px] text-[#8A3324] font-medium">Est. Duration</div>
-                  <div className="font-bold text-[#4A151B]">{design.duration}</div>
+                  <div className="font-bold text-[#4A151B]">{design.duration || '2 - 4 Hours'}</div>
                 </div>
               </div>
 
@@ -101,35 +105,37 @@ export const DesignModal = ({ design, isOpen, onClose, onBookDesign, isLiked, on
                 <Award className="w-4 h-4 text-[#D4AF37]" />
                 <div>
                   <div className="text-[10px] text-[#8A3324] font-medium">Stain Depth</div>
-                  <div className="font-bold text-[#4A151B] text-[11px] truncate">{design.stainDepth}</div>
+                  <div className="font-bold text-[#4A151B] text-[11px] truncate">{design.stainDepth || 'Deep Mahogany'}</div>
                 </div>
               </div>
             </div>
 
             {/* Motifs Included */}
-            <div>
-              <div className="text-xs font-bold text-[#4A151B] uppercase tracking-wider mb-2">
-                Signatures & Motifs
+            {Array.isArray(design.motifs) && design.motifs.length > 0 && (
+              <div>
+                <div className="text-xs font-bold text-[#4A151B] uppercase tracking-wider mb-2">
+                  Signatures &amp; Motifs
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {design.motifs.map((motif, i) => (
+                    <span
+                      key={i}
+                      className="px-2.5 py-1 rounded-lg bg-white border border-[#D4AF37]/30 text-xs text-[#611C23] font-medium flex items-center gap-1 shadow-sm"
+                    >
+                      <Check className="w-3 h-3 text-[#D4AF37]" />
+                      {motif}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {design.motifs.map((motif, i) => (
-                  <span
-                    key={i}
-                    className="px-2.5 py-1 rounded-lg bg-white border border-[#D4AF37]/30 text-xs text-[#611C23] font-medium flex items-center gap-1 shadow-sm"
-                  >
-                    <Check className="w-3 h-3 text-[#D4AF37]" />
-                    {motif}
-                  </span>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Pricing & CTA */}
           <div className="pt-4 border-t border-[#D4AF37]/20 mt-4 flex items-center justify-between gap-3">
             <div>
               <span className="text-[10px] uppercase font-bold text-[#8A3324] block">Investment</span>
-              <span className="text-xl font-bold font-royal text-[#4A151B]">{design.priceEstimate}</span>
+              <span className="text-xl font-bold font-royal text-[#4A151B]">{design.priceEstimate || '₹4,999'}</span>
             </div>
 
             <button

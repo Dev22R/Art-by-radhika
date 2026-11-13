@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'sonner';
 import {
   Sparkles,
   Crown,
@@ -9,6 +11,7 @@ import {
   ChevronDown,
   Star,
   Flame,
+  ThumbsUp,
 } from 'lucide-react';
 
 import {
@@ -16,13 +19,46 @@ import {
   PRICING_PACKAGES,
   TESTIMONIALS_DATA,
   STAIN_TIMELINE,
-  FAQS_DATA,
 } from '../data/mehndiData';
+import { fetchFaqs, voteFaqHelpful } from '../redux/slices/faqSlice';
 
-export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign }) => {
+export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAuth }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { faqs, loading: faqsLoading, votingFaqId, userVotes } = useSelector(
+    (state) => state.faqs
+  );
+
   const [selectedStainStage, setSelectedStainStage] = useState(2); // default to final dark stain
   const [faqOpenIndex, setFaqOpenIndex] = useState(0);
+
+  useEffect(() => {
+    dispatch(fetchFaqs());
+  }, [dispatch]);
+
+  const handleVoteHelpful = async (faq) => {
+    const faqId = faq._id || faq.id;
+    if (!faqId) return;
+
+    if (!isAuthenticated) {
+      toast.error('Please login first to vote on FAQs! ✨');
+      if (onOpenAuth) onOpenAuth();
+      return;
+    }
+
+    if (userVotes && userVotes[faqId]) {
+      toast.info('You have already voted on this FAQ');
+      return;
+    }
+
+    try {
+      const res = await dispatch(voteFaqHelpful({ id: faqId, isHelpful: true })).unwrap();
+      toast.success(res?.res?.message || 'Thank you for your feedback! ✨');
+    } catch (err) {
+      toast.error(err?.msg || 'Could not submit vote. Please try again.');
+    }
+  };
 
   // Interactive Estimator state
   const [estimatorCoverage, setEstimatorCoverage] = useState('full-elbow');
@@ -463,36 +499,80 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign }) => {
         </div>
 
         <div className="space-y-3">
-          {FAQS_DATA.map((faq, index) => {
-            const isOpen = faqOpenIndex === index;
-            return (
-              <div
-                key={index}
-                className="bg-white rounded-2xl border border-[#D4AF37]/30 overflow-hidden shadow-sm transition-all"
-              >
-                <button
-                  type="button"
-                  onClick={() => setFaqOpenIndex(isOpen ? -1 : index)}
-                  className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 cursor-pointer"
+          {faqsLoading && faqs.length === 0 ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((item) => (
+                <div
+                  key={item}
+                  className="bg-white/60 rounded-2xl border border-[#D4AF37]/20 p-5 animate-pulse flex items-center justify-between"
                 >
-                  <span className="font-royal text-sm sm:text-base font-bold text-[#4A151B]">
-                    {faq.q}
-                  </span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-[#8A3324] transition-transform duration-300 ${
-                      isOpen ? 'rotate-180' : ''
-                    }`}
-                  />
-                </button>
+                  <div className="h-4 bg-[#D4AF37]/20 rounded w-3/4" />
+                  <div className="w-4 h-4 rounded-full bg-[#D4AF37]/20" />
+                </div>
+              ))}
+            </div>
+          ) : faqs && faqs.length > 0 ? (
+            faqs.map((faq, index) => {
+              const isOpen = faqOpenIndex === index;
+              const faqId = faq._id || faq.id || index;
+              const hasVoted = userVotes && userVotes[faqId];
 
-                {isOpen && (
-                  <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-[#4A151B]/80 leading-relaxed border-t border-[#D4AF37]/15 animate-in fade-in duration-200">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+              return (
+                <div
+                  key={faqId}
+                  className="bg-white rounded-2xl border border-[#D4AF37]/30 overflow-hidden shadow-sm transition-all"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setFaqOpenIndex(isOpen ? -1 : index)}
+                    className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 cursor-pointer"
+                  >
+                    <span className="font-royal text-sm sm:text-base font-bold text-[#4A151B]">
+                      {faq.question || faq.q}
+                    </span>
+                    <ChevronDown
+                      className={`w-4 h-4 text-[#8A3324] transition-transform duration-300 ${
+                        isOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+
+                  {isOpen && (
+                    <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-[#4A151B]/80 leading-relaxed border-t border-[#D4AF37]/15 animate-in fade-in duration-200 space-y-3">
+                      <p>{faq.answer || faq.a}</p>
+
+                      <div className="pt-2.5 border-t border-[#D4AF37]/10 flex items-center justify-between text-xs text-[#4A151B]/70">
+                        <span className="text-[11px] sm:text-xs">Was this helpful?</span>
+                        <button
+                          type="button"
+                          disabled={votingFaqId === faqId || hasVoted}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleVoteHelpful(faq);
+                          }}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold transition-all cursor-pointer border ${
+                            hasVoted
+                              ? 'bg-[#4A151B] text-[#FFFDF9] border-[#4A151B] shadow-xs'
+                              : 'bg-[#FAF6F0] hover:bg-[#F3ECE1] text-[#4A151B] border-[#D4AF37]/40 hover:border-[#D4AF37]'
+                          } ${votingFaqId === faqId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          <ThumbsUp
+                            className={`w-3.5 h-3.5 ${
+                              hasVoted ? 'text-[#D4AF37] fill-[#D4AF37]' : 'text-[#8A3324]'
+                            }`}
+                          />
+                          <span>{hasVoted ? 'Helpful' : 'Yes'}</span>
+                          {faq.helpfulCount !== undefined && faq.helpfulCount !== null && (
+                            <span className="ml-0.5 opacity-80">({faq.helpfulCount})</span>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          ) : null}
         </div>
       </section>
 

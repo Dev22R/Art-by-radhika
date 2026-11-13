@@ -146,7 +146,11 @@ export const ProfilePage = ({
     }
   }, [user]);
 
-  const favoritedDesigns = DESIGNS_DATA.filter((d) => favorites.includes(d.id));
+  const { designs: reduxDesigns } = useSelector((state) => state.designs);
+  const allAvailableDesigns = reduxDesigns && reduxDesigns.length > 0 ? reduxDesigns : DESIGNS_DATA;
+  const favoritedDesigns = allAvailableDesigns.filter(
+    (d) => favorites.includes(d.id) || favorites.includes(d._id)
+  );
 
   // --- Auth Handlers ---
   const handleAuthChange = (e) => {

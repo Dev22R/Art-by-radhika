@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://artbyradhika-app.vercel.app/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -8,6 +8,7 @@ export const api = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 15000,
+  withCredentials: true,
 });
 
 // Request Interceptor: Attach JWT token if present and handle FormData headers
@@ -103,6 +104,50 @@ export const addressService = {
   },
 };
 
+// Category Service Endpoints
+export const categoryService = {
+  getCategories: async () => {
+    const response = await api.get('/categories');
+    return response.data;
+  },
+  getSubcategories: async (categorySlug) => {
+    const response = await api.get(`/categories/${categorySlug}/subcategories`);
+    return response.data;
+  },
+  getCategoryBySlug: async (slug) => {
+    const response = await api.get(`/categories/${slug}`);
+    return response.data;
+  },
+};
+
+// Design Service Endpoints
+export const designService = {
+  getDesigns: async (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.category && params.category !== 'all') query.append('category', params.category);
+    if (params.subcategory && params.subcategory !== 'all') query.append('subcategory', params.subcategory);
+    if (params.search) query.append('search', params.search);
+    if (params.complexity && params.complexity !== 'all') query.append('complexity', params.complexity);
+    if (params.density && params.density !== 'all') query.append('density', params.density);
+    if (params.style && params.style !== 'all') query.append('style', params.style);
+    if (params.sort) query.append('sort', params.sort);
+    if (params.page) query.append('page', params.page);
+    if (params.limit) query.append('limit', params.limit);
+    const queryString = query.toString();
+    const url = `/designs${queryString ? `?${queryString}` : ''}`;
+    const response = await api.get(url);
+    return response.data;
+  },
+  getDesignBySlug: async (slugOrId) => {
+    const response = await api.get(`/designs/${slugOrId}`);
+    return response.data;
+  },
+  likeDesign: async (designId) => {
+    const response = await api.post(`/designs/${designId}/like`);
+    return response.data;
+  },
+};
+
 // Reels Service Endpoints
 export const reelsService = {
   getReels: async (params = {}) => {
@@ -147,6 +192,18 @@ export const reelsService = {
   },
   trackView: async (reelId, watchDuration) => {
     const response = await api.post(`/reels/${reelId}/view`, { watchDuration });
+    return response.data;
+  },
+};
+
+// FAQ Service Endpoints
+export const faqService = {
+  getFaqs: async () => {
+    const response = await api.get('/faqs');
+    return response.data;
+  },
+  voteFaq: async (faqId, isHelpful = true) => {
+    const response = await api.post(`/faqs/${faqId}/vote`, { isHelpful });
     return response.data;
   },
 };

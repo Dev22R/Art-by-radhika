@@ -8,8 +8,8 @@ export const BottomNavbar = () => {
   const navItems = [
     { id: 'home', path: '/', label: 'Home', icon: Home },
     { id: 'designs', path: '/designs', label: 'Designs', icon: Sparkles },
-    { id: 'pricing', path: '/pricing', label: 'Pricing', icon: Tag },
     { id: 'reels', path: '/reels', label: 'Reels', icon: Film, hasBadge: true },
+    { id: 'pricing', path: '/pricing', label: 'Pricing', icon: Tag },
     { id: 'profile', path: '/profile', label: 'Profile', icon: User },
   ];
 
@@ -29,9 +29,8 @@ export const BottomNavbar = () => {
             <Link
               key={item.id}
               to={item.path}
-              className={`relative flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all duration-200 cursor-pointer flex-1 ${
-                isActive ? 'text-[#D4AF37]' : 'text-[#FAF6F0]/70 hover:text-[#FAF6F0]'
-              }`}
+              className={`relative flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all duration-200 cursor-pointer flex-1 ${isActive ? 'text-[#D4AF37]' : 'text-[#FAF6F0]/70 hover:text-[#FAF6F0]'
+                }`}
             >
               {/* Active Indicator Glow Background */}
               {isActive && (
@@ -40,9 +39,8 @@ export const BottomNavbar = () => {
 
               <div className="relative">
                 <Icon
-                  className={`w-5 h-5 transition-transform duration-200 ${
-                    isActive ? 'scale-110 stroke-[2.2]' : 'scale-100'
-                  }`}
+                  className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110 stroke-[2.2]' : 'scale-100'
+                    }`}
                 />
                 {item.hasBadge && (
                   <span className="absolute -top-1 -right-1.5 w-2 h-2 rounded-full bg-[#E25822] ring-2 ring-[#1A0D0E] animate-ping" />
@@ -53,9 +51,8 @@ export const BottomNavbar = () => {
               </div>
 
               <span
-                className={`text-[10px] mt-0.5 font-medium tracking-tight transition-all ${
-                  isActive ? 'font-bold text-[#D4AF37]' : 'text-[#FAF6F0]/60'
-                }`}
+                className={`text-[10px] mt-0.5 font-medium tracking-tight transition-all ${isActive ? 'font-bold text-[#D4AF37]' : 'text-[#FAF6F0]/60'
+                  }`}
               >
                 {item.label}
               </span>

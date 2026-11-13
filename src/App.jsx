@@ -10,6 +10,7 @@ import { DesignModal } from './components/DesignModal';
 import { AuthModal } from './components/AuthModal';
 import { HomePage } from './pages/HomePage';
 import { DesignsPage } from './pages/DesignsPage';
+import { DesignDetailPage } from './pages/DesignDetailPage';
 import { PricingPage } from './pages/PricingPage';
 import { ReelsPage } from './pages/ReelsPage';
 import { ProfilePage } from './pages/ProfilePage';
@@ -167,6 +168,30 @@ function App() {
                 onBookDesign={(design) => handleOpenEnquiryWithItem(design)}
                 favorites={favorites}
                 onToggleLike={handleToggleLike}
+              />
+            }
+          />
+
+          <Route
+            path="/designs/:slug"
+            element={
+              <DesignDetailPage
+                onBookDesign={(design) => handleOpenEnquiryWithItem(design)}
+                favorites={favorites}
+                onToggleLike={handleToggleLike}
+                onOpenAuth={() => setIsAuthOpen(true)}
+              />
+            }
+          />
+
+          <Route
+            path="/design/:slug"
+            element={
+              <DesignDetailPage
+                onBookDesign={(design) => handleOpenEnquiryWithItem(design)}
+                favorites={favorites}
+                onToggleLike={handleToggleLike}
+                onOpenAuth={() => setIsAuthOpen(true)}
               />
             }
           />
