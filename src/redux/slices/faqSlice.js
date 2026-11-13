@@ -86,6 +86,16 @@ export const faqSlice = createSlice({
       .addCase(fetchFaqs.fulfilled, (state, action) => {
         state.loading = false;
         state.faqs = action.payload || [];
+
+        // Sync userVotes from API if user is authenticated and already voted
+        if (Array.isArray(action.payload)) {
+          action.payload.forEach((faq) => {
+            const faqId = faq._id || faq.id;
+            if (faqId && (faq.isVoted || faq.votedUserId || faq.userVote)) {
+              state.userVotes[faqId] = true;
+            }
+          });
+        }
       })
       .addCase(fetchFaqs.rejected, (state, action) => {
         state.loading = false;
@@ -103,6 +113,9 @@ export const faqSlice = createSlice({
 
         const targetFaq = state.faqs.find((f) => (f._id || f.id) === id);
         if (targetFaq) {
+          targetFaq.isVoted = true;
+          targetFaq.userVote = isHelpful;
+
           if (res?.data?.helpfulCount !== undefined) {
             targetFaq.helpfulCount = res.data.helpfulCount;
           } else if (isHelpful) {

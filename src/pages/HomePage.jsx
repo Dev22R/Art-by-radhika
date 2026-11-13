@@ -35,7 +35,7 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
 
   useEffect(() => {
     dispatch(fetchFaqs());
-  }, [dispatch]);
+  }, [dispatch, isAuthenticated]);
 
   const handleVoteHelpful = async (faq) => {
     const faqId = faq._id || faq.id;
@@ -47,7 +47,14 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
       return;
     }
 
-    if (userVotes && userVotes[faqId]) {
+    const alreadyVoted = Boolean(
+      (userVotes && userVotes[faqId]) ||
+      faq.isVoted ||
+      faq.userVote ||
+      faq.votedUserId
+    );
+
+    if (alreadyVoted) {
       toast.info('You have already voted on this FAQ');
       return;
     }
@@ -515,7 +522,12 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
             faqs.map((faq, index) => {
               const isOpen = faqOpenIndex === index;
               const faqId = faq._id || faq.id || index;
-              const hasVoted = userVotes && userVotes[faqId];
+              const hasVoted = Boolean(
+                (userVotes && userVotes[faqId]) ||
+                faq.isVoted ||
+                faq.userVote ||
+                (faq.votedUserId && faq.isVoted !== false)
+              );
 
               return (
                 <div
