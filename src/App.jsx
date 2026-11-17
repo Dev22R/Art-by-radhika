@@ -15,6 +15,12 @@ import { PricingPage } from './pages/PricingPage';
 import { ReelsPage } from './pages/ReelsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AddAddressPage } from './pages/AddAddressPage';
+import { TestimonialsPage } from './pages/testimonialsPage';
+import { ForgotPasswordProvider } from './pages/forgot-password/ForgotPasswordContext';
+import { CaptchaPage } from './pages/forgot-password/CaptchaPage';
+import { CaptchaVerifyPage } from './pages/forgot-password/CaptchaVerifyPage';
+import { OtpVerifyPage } from './pages/forgot-password/OtpVerifyPage';
+import { SetNewPasswordPage } from './pages/forgot-password/SetNewPasswordPage';
 import { LogoutModal } from './components/LogoutModal';
 import { Crown, ShieldCheck, Phone, MapPin, LogOut } from 'lucide-react';
 import { fetchUserProfile, logoutUser } from './redux/slices/authSlice';
@@ -121,6 +127,12 @@ function App() {
   const isAddAddressPage =
     location.pathname.startsWith('/add') || location.pathname.includes('add/address');
   const isReelsPage = location.pathname.startsWith('/reels');
+  const isForgotPwPage =
+    location.pathname.startsWith('/captch') ||
+    location.pathname.startsWith('/captcha') ||
+    location.pathname.startsWith('/otp') ||
+    location.pathname.startsWith('/set-new-password') ||
+    location.pathname.startsWith('/reset-password');
 
   return (
     <div
@@ -148,7 +160,8 @@ function App() {
 
       {/* Main Content Area with React Router Routes */}
       <main className={isReelsPage ? 'flex-1 bg-black flex flex-col pt-0 md:pt-16' : 'flex-1 pt-18 sm:pt-20'}>
-        <Routes>
+        <ForgotPasswordProvider>
+          <Routes>
           <Route
             path="/"
             element={
@@ -226,18 +239,40 @@ function App() {
           <Route path="/add-address" element={<Navigate to="/add/address" replace />} />
           <Route path="/profile/add/address" element={<Navigate to="/add/address" replace />} />
 
+          {/* User Feedbacks & Testimonials Route */}
+          <Route path="/art-by-radhika-user-feedbacks" element={<TestimonialsPage />} />
+          <Route path="/testimonials" element={<Navigate to="/art-by-radhika-user-feedbacks" replace />} />
+
+          {/* Dedicated Forgot Password Recovery Routes */}
+          <Route path="/captch-page" element={<CaptchaPage />} />
+          <Route path="/captcha-page" element={<Navigate to="/captch-page" replace />} />
+
+          <Route path="/captch-verify-page" element={<CaptchaVerifyPage />} />
+          <Route path="/captcha-verify-page" element={<Navigate to="/captch-verify-page" replace />} />
+
+          <Route path="/otp-vairfy-page" element={<OtpVerifyPage />} />
+          <Route path="/otp-verify-page" element={<Navigate to="/otp-vairfy-page" replace />} />
+
+          <Route path="/set-new-password=page." element={<SetNewPasswordPage />} />
+          <Route path="/set-new-password=page" element={<SetNewPasswordPage />} />
+          <Route path="/set-new-password-page" element={<Navigate to="/set-new-password=page." replace />} />
+          <Route path="/set-new-password" element={<Navigate to="/set-new-password=page." replace />} />
+          <Route path="/reset-password" element={<Navigate to="/set-new-password=page." replace />} />
+
           {/* Catch-all redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </main>
+      </ForgotPasswordProvider>
+    </main>
 
-      {/* Floating Contact Enquiry Button (Hidden on /profile when logged out, on /add/address, and on /reels page) */}
+      {/* Floating Contact Enquiry Button (Hidden on /profile when logged out, on /add/address, on /reels page, and forgot password pages) */}
       {(!location.pathname.startsWith('/profile') || isAuthenticated) &&
         !isAddAddressPage &&
+        !isForgotPwPage &&
         !isReelsPage && <FloatingEnquiryBtn onClick={handleGeneralEnquiry} />}
 
-      {/* Mobile Modern Bottom Navigation Bar (Hidden on /add/address page) */}
-      {!isAddAddressPage && <BottomNavbar />}
+      {/* Mobile Modern Bottom Navigation Bar (Hidden on /add/address and forgot password pages) */}
+      {!isAddAddressPage && !isForgotPwPage && <BottomNavbar />}
 
       {/* Lightbox Design Modal */}
       <DesignModal

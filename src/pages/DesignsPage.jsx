@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles,
   Search,
@@ -20,6 +21,8 @@ import {
   Footprints,
   RefreshCw,
   ArrowRight,
+  Play,
+  SlidersHorizontal,
 } from 'lucide-react';
 import {
   fetchCategories,
@@ -199,28 +202,46 @@ export const DesignsPage = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8 pb-16">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-5 sm:space-y-7 pb-20">
       {/* Page Header */}
-      <div className="text-center max-w-3xl mx-auto space-y-3">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#8A3324]/10 border border-[#8A3324]/20 text-[#8A3324] text-xs uppercase font-bold tracking-widest">
-          <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+      <div className="text-center max-w-2xl mx-auto space-y-2 pt-1 sm:pt-2">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#8A3324]/10 border border-[#8A3324]/20 text-[#8A3324] text-[11px] sm:text-xs uppercase font-bold tracking-widest"
+        >
+          <Sparkles className="w-3 h-3 text-[#D4AF37]" />
           <span>Curated Portfolio &amp; Master Lookbook</span>
-        </div>
-
-
+        </motion.div>
+        {/* <motion.h1
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="font-royal text-2xl sm:text-3xl md:text-4xl font-bold text-[#4A151B] tracking-tight"
+        >
+          Signature Mehndi Masterpieces
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="text-xs sm:text-sm text-[#4A151B]/75 max-w-xl mx-auto"
+        >
+          Handcrafted royal henna patterns tailored for brides, celebrations &amp; heritage lovers.
+        </motion.p> */}
       </div>
 
       {/* Main Filter Section */}
-      <div className="max-w-4xl mx-auto space-y-4">
-        {/* Search Bar */}
+      <div className="max-w-4xl mx-auto space-y-3 sm:space-y-4">
+        {/* Search Bar - Native App Feel */}
         <div className="relative">
-          <Search className="w-4 h-4 text-[#8A3324] absolute left-4 top-3.5" />
+          <Search className="w-4 h-4 text-[#8A3324] absolute left-3.5 sm:left-4 top-3 sm:top-3.5" />
           <input
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Search by motif (e.g. Lotus, Portrait, Jharokha, Peacock, Arabic)..."
-            className="w-full pl-11 pr-10 py-3 rounded-full border border-[#D4AF37]/40 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#8A3324] shadow-sm transition-all text-[#4A151B] placeholder:text-[#4A151B]/40"
+            placeholder="Search designs, motifs, lotus, peacock..."
+            className="w-full pl-10 sm:pl-11 pr-10 py-2.5 sm:py-3 rounded-full border border-[#D4AF37]/40 bg-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#8A3324]/25 focus:border-[#8A3324] shadow-xs transition-all text-[#4A151B] placeholder:text-[#4A151B]/40"
           />
           {searchInput && (
             <button
@@ -228,41 +249,42 @@ export const DesignsPage = ({
                 setSearchInput('');
                 dispatch(setSearchQuery(''));
               }}
-              className="absolute right-3.5 top-3.5 p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute right-3 top-2.5 sm:top-3 p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
               aria-label="Clear search"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
 
         {/* Category Horizontal Filter Carousel/Pills */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#8A3324] flex items-center gap-1.5">
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#8A3324] flex items-center gap-1.5">
               <Crown className="w-3.5 h-3.5 text-[#D4AF37]" />
               Categories
             </span>
             {categoriesLoading && (
-              <span className="text-[11px] text-[#8A3324]/70 flex items-center gap-1">
+              <span className="text-[10px] sm:text-[11px] text-[#8A3324]/70 flex items-center gap-1">
                 <RefreshCw className="w-3 h-3 animate-spin" />
-                Loading categories...
+                Loading...
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1.5 scroll-smooth">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 scroll-smooth -mx-3 px-3 sm:mx-0 sm:px-0">
             {/* "All" Category Pill */}
-            <button
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={() => handleSelectCategory('all')}
-              className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${selectedCategory === 'all'
-                ? 'bg-[#4A151B] text-[#D4AF37] shadow-md scale-105 border border-[#D4AF37]/60 ring-2 ring-[#D4AF37]/30'
-                : 'bg-white text-[#4A151B] border border-[#D4AF37]/25 hover:bg-[#F3ECE1] hover:border-[#D4AF37]/50'
+              className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${selectedCategory === 'all'
+                  ? 'bg-[#4A151B] text-[#D4AF37] shadow-sm border border-[#D4AF37] ring-2 ring-[#D4AF37]/30'
+                  : 'bg-white text-[#4A151B] border border-[#D4AF37]/25 hover:bg-[#F3ECE1] hover:border-[#D4AF37]/50'
                 }`}
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
               <span>All Masterpieces</span>
-            </button>
+            </motion.button>
 
             {/* Dynamic Categories from API */}
             {categories.map((cat) => {
@@ -271,125 +293,122 @@ export const DesignsPage = ({
               const IconComp = getCategoryIcon(cat.icon);
 
               return (
-                <button
+                <motion.button
                   key={cat._id || cat.slug || cat.name}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => handleSelectCategory(catIdentifier)}
-                  className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${isActive
-                    ? 'bg-[#4A151B] text-[#D4AF37] shadow-md scale-105 border border-[#D4AF37]/60 ring-2 ring-[#D4AF37]/30'
-                    : 'bg-white text-[#4A151B] border border-[#D4AF37]/25 hover:bg-[#F3ECE1] hover:border-[#D4AF37]/50'
+                  className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${isActive
+                      ? 'bg-[#4A151B] text-[#D4AF37] shadow-sm border border-[#D4AF37] ring-2 ring-[#D4AF37]/30'
+                      : 'bg-white text-[#4A151B] border border-[#D4AF37]/25 hover:bg-[#F3ECE1] hover:border-[#D4AF37]/50'
                     }`}
                 >
-                  <IconComp className="w-3.5 h-3.5" />
+                  <IconComp className="w-3.5 h-3.5 text-[#D4AF37]" />
                   <span>{cat.name}</span>
-                  {/* {typeof cat.designCount === 'number' && cat.designCount > 0 && (
-                    <span
-                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isActive
-                        ? 'bg-[#D4AF37]/20 text-[#D4AF37]'
-                        : 'bg-[#F3ECE1] text-[#8A3324]'
-                        }`}
-                    >
-                      {cat.designCount}
-                    </span>
-                  )} */}
-                </button>
+                </motion.button>
               );
             })}
           </div>
         </div>
 
         {/* Sub-Category Filter (Shows when a category is selected & has subcategories) */}
-        {selectedCategory !== 'all' && availableSubcategories.length > 0 && (
-          <div className="p-3.5 rounded-2xl bg-[#F3ECE1]/70 border border-[#D4AF37]/30 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#611C23] flex items-center gap-1">
-                <Layers className="w-3.5 h-3.5 text-[#8A3324]" />
-                {activeCategoryObj?.name || 'Category'} Sub-Styles:
-              </span>
-              {subcategoriesLoading && (
-                <span className="text-[10px] text-[#8A3324] flex items-center gap-1">
-                  <RefreshCw className="w-3 h-3 animate-spin" />
-                  Updating...
+        <AnimatePresence>
+          {selectedCategory !== 'all' && availableSubcategories.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="p-2.5 sm:p-3 rounded-2xl bg-[#F3ECE1]/70 border border-[#D4AF37]/30 space-y-2 overflow-hidden"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#611C23] flex items-center gap-1">
+                  <Layers className="w-3 h-3 text-[#8A3324]" />
+                  {activeCategoryObj?.name || 'Category'} Sub-Styles:
                 </span>
-              )}
-            </div>
+                {subcategoriesLoading && (
+                  <span className="text-[10px] text-[#8A3324] flex items-center gap-1">
+                    <RefreshCw className="w-2.5 h-2.5 animate-spin" />
+                    Updating...
+                  </span>
+                )}
+              </div>
 
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-              <button
-                onClick={() => handleSelectSubcategory('all')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${selectedSubcategory === 'all'
-                  ? 'bg-[#8A3324] text-white shadow-sm font-bold'
-                  : 'bg-white text-[#4A151B] border border-[#D4AF37]/30 hover:bg-white/90'
-                  }`}
-              >
-                All {activeCategoryObj?.name || 'Styles'}
-              </button>
-
-              {availableSubcategories.map((sub) => {
-                const subIdentifier = sub.slug || sub._id;
-                const isSubActive = selectedSubcategory === subIdentifier;
-
-                return (
-                  <button
-                    key={sub._id || sub.slug || sub.name}
-                    onClick={() => handleSelectSubcategory(subIdentifier)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 ${isSubActive
-                      ? 'bg-[#8A3324] text-white shadow-sm font-bold scale-[1.02]'
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
+                <button
+                  onClick={() => handleSelectSubcategory('all')}
+                  className={`px-3 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${selectedSubcategory === 'all'
+                      ? 'bg-[#8A3324] text-white shadow-xs font-bold'
                       : 'bg-white text-[#4A151B] border border-[#D4AF37]/30 hover:bg-white/90'
-                      }`}
-                  >
-                    <span>{sub.name}</span>
-                    {typeof sub.designCount === 'number' && sub.designCount > 0 && (
-                      <span className="text-[10px] opacity-80">({sub.designCount})</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
+                    }`}
+                >
+                  All {activeCategoryObj?.name || 'Styles'}
+                </button>
+
+                {availableSubcategories.map((sub) => {
+                  const subIdentifier = sub.slug || sub._id;
+                  const isSubActive = selectedSubcategory === subIdentifier;
+
+                  return (
+                    <button
+                      key={sub._id || sub.slug || sub.name}
+                      onClick={() => handleSelectSubcategory(subIdentifier)}
+                      className={`px-3 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 ${isSubActive
+                          ? 'bg-[#8A3324] text-white shadow-xs font-bold'
+                          : 'bg-white text-[#4A151B] border border-[#D4AF37]/30 hover:bg-white/90'
+                        }`}
+                    >
+                      <span>{sub.name}</span>
+                      {typeof sub.designCount === 'number' && sub.designCount > 0 && (
+                        <span className="text-[10px] opacity-80">({sub.designCount})</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Results Count & Reset Header */}
-        <div className="flex items-center justify-between pt-1 text-xs text-[#8A3324]">
-
+        <div className="flex items-center justify-between pt-0.5 px-1 text-xs text-[#8A3324]">
+          <span className="text-[11px] sm:text-xs font-medium text-[#4A151B]/75">
+            Showing <strong className="text-[#4A151B] font-bold">{filteredDesigns.length}</strong> {filteredDesigns.length === 1 ? 'masterpiece' : 'masterpieces'}
+          </span>
 
           {(selectedCategory !== 'all' || selectedSubcategory !== 'all' || searchInput) && (
-            <button
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={handleResetFilters}
               className="text-[11px] font-bold text-[#8A3324] hover:underline flex items-center gap-1 cursor-pointer bg-white px-2.5 py-1 rounded-full border border-[#D4AF37]/30 shadow-xs"
             >
               <X className="w-3 h-3" />
-              Reset Filters
-            </button>
+              <span>Reset</span>
+            </motion.button>
           )}
         </div>
       </div>
 
-      {/* Loading Skeleton */}
+      {/* Loading Skeleton - 2 Columns on Mobile */}
       {designsLoading && designs.length === 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 md:gap-6">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <div
               key={i}
-              className="bg-white rounded-2xl border border-[#D4AF37]/20 p-4 space-y-3 animate-pulse"
+              className="bg-white rounded-2xl sm:rounded-3xl border border-[#D4AF37]/20 p-2 sm:p-3 space-y-2.5 animate-pulse"
             >
-              <div className="h-72 sm:h-80 bg-gray-200 rounded-xl" />
-              <div className="h-4 bg-gray-200 rounded w-3/4" />
-              <div className="h-3 bg-gray-200 rounded w-full" />
+              <div className="aspect-[4/5] bg-gray-200 rounded-xl sm:rounded-2xl" />
+              <div className="h-3.5 bg-gray-200 rounded w-3/4" />
               <div className="h-3 bg-gray-200 rounded w-1/2" />
-              <div className="flex gap-2 pt-2">
-                <div className="h-8 bg-gray-200 rounded-xl flex-1" />
-                <div className="h-8 bg-gray-200 rounded-xl flex-1" />
-              </div>
+              <div className="h-6 bg-gray-200 rounded-lg w-full pt-1" />
             </div>
           ))}
         </div>
       ) : designsError && filteredDesigns.length === 0 ? (
         /* Error State */
-        <div className="text-center py-16 bg-white rounded-3xl border border-red-200 p-8 space-y-4 max-w-md mx-auto shadow-sm">
+        <div className="text-center py-12 sm:py-16 bg-white rounded-3xl border border-red-200 p-6 sm:p-8 space-y-4 max-w-md mx-auto shadow-xs">
           <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto">
             <RefreshCw className="w-6 h-6" />
           </div>
-          <h3 className="font-royal text-xl font-bold text-[#4A151B]">
+          <h3 className="font-royal text-lg sm:text-xl font-bold text-[#4A151B]">
             Unable to Load Designs
           </h3>
           <p className="text-xs text-red-600/80 leading-relaxed">
@@ -413,9 +432,9 @@ export const DesignsPage = ({
         </div>
       ) : filteredDesigns.length === 0 ? (
         /* Empty State */
-        <div className="text-center py-16 bg-white rounded-3xl border border-[#D4AF37]/20 p-8 space-y-4 max-w-md mx-auto shadow-sm">
+        <div className="text-center py-12 sm:py-16 bg-white rounded-3xl border border-[#D4AF37]/20 p-6 sm:p-8 space-y-4 max-w-md mx-auto shadow-xs">
           <Sparkles className="w-10 h-10 text-[#D4AF37] mx-auto animate-pulse" />
-          <h3 className="font-royal text-xl font-bold text-[#4A151B]">
+          <h3 className="font-royal text-lg sm:text-xl font-bold text-[#4A151B]">
             No matching designs found
           </h3>
           <p className="text-xs text-[#4A151B]/75 leading-relaxed">
@@ -430,146 +449,135 @@ export const DesignsPage = ({
           </button>
         </div>
       ) : (
-        /* Designs Grid */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredDesigns.map((design) => {
-            const isLiked =
-              favorites.includes(design.id) || favorites.includes(design._id);
+        /* Designs Grid - Strictly 2 Columns on Mobile, 3 on md, 4 on lg */
+        <motion.div
+          layout
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 md:gap-6"
+        >
+          <AnimatePresence>
+            {filteredDesigns.map((design, index) => {
+              const isLiked =
+                favorites.includes(design.id) || favorites.includes(design._id);
+              const targetSlug = design.slug || design._id || design.id;
 
-            return (
-              <div
-                key={design.id || design._id}
-                className="group bg-[#FFFDF9] rounded-2xl overflow-hidden border border-[#D4AF37]/30 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
-              >
-                {/* Image Section - Displays Complete Uncropped Image */}
-                <div className="relative h-72 sm:h-80 w-full overflow-hidden bg-[#1A0A0C] flex items-center justify-center">
-                  {/* Blurred Backdrop */}
-                  <img
-                    src={design.image}
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute inset-0 w-full h-full object-cover blur-xl opacity-35 scale-110 pointer-events-none"
-                  />
+              return (
+                <motion.div
+                  layout
+                  key={design.id || design._id || index}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.25, delay: Math.min(index * 0.04, 0.3) }}
+                  whileHover={{ y: -4 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => navigate(`/designs/${targetSlug}`)}
+                  className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-[#D4AF37]/25 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between cursor-pointer"
+                >
+                  {/* Media / Image Box - Aspect 4/5 for App-like vertical preview */}
+                  <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#1A0A0C] flex items-center justify-center">
+                    {/* Ambient Blurred Backdrop */}
+                    <img
+                      src={design.coverImage || design.image}
+                      alt=""
+                      aria-hidden="true"
+                      className="absolute inset-0 w-full h-full object-cover blur-xl opacity-35 scale-110 pointer-events-none"
+                    />
 
-                  {/* Main Uncropped Foreground Image */}
-                  <img
-                    src={design.image}
-                    alt={design.title}
-                    className="relative z-1 max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src =
-                        design.fallbackImage ||
-                        'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=900&q=80';
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/30 opacity-80 pointer-events-none z-2" />
+                    {/* Foreground Image */}
+                    <img
+                      src={design.coverImage || design.image}
+                      alt={design.title}
+                      className="relative z-[1] max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src =
+                          design.fallbackImage ||
+                          'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=900&q=80';
+                      }}
+                    />
 
-                  {/* Top Badges */}
-                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 z-10">
-                    <div className="flex flex-wrap gap-1">
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#1A0D0E]/85 backdrop-blur-md text-[#D4AF37] border border-[#D4AF37]/30 shadow">
+                    {/* Gradient Scrims */}
+                    <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/60 to-transparent pointer-events-none z-[2]" />
+                    <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none z-[2]" />
+
+                    {/* Top Floating Badges */}
+                    <div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-1 z-10">
+                      <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-[#1A0D0E]/85 backdrop-blur-md text-[#D4AF37] border border-[#D4AF37]/35 shadow-xs tracking-wider uppercase line-clamp-1 max-w-[70%]">
                         {design.style || design.categoryName || 'Bridal Henna'}
                       </span>
-                      {design.subcategoryName && (
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-[#4A151B]/85 backdrop-blur-md text-white/90 border border-white/20">
-                          {design.subcategoryName}
+
+                      {/* Favorite Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLike(design);
+                        }}
+                        className={`p-1.5 sm:p-2 rounded-full backdrop-blur-md transition-all active:scale-75 cursor-pointer ${isLiked
+                            ? 'bg-[#E63946] text-white shadow-md'
+                            : 'bg-black/40 text-white hover:bg-black/60'
+                          }`}
+                        aria-label="Add to favorites"
+                      >
+                        <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-white' : ''}`} />
+                      </button>
+                    </div>
+
+                    {/* Bottom Image Stats (Duration & Video pill) */}
+                    <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[10px] sm:text-[11px] text-white/90 z-10">
+                      <span className="flex items-center gap-1 font-medium bg-black/60 px-1.5 sm:px-2 py-0.5 rounded-md backdrop-blur-xs">
+                        <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#D4AF37]" />
+                        <span>{design.duration}</span>
+                      </span>
+
+                      {design.videoUrl && (
+                        <span className="flex items-center gap-1 bg-[#8A3324]/85 text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md backdrop-blur-xs">
+                          <Play className="w-2.5 h-2.5 fill-white" />
+                          <span>Reel</span>
                         </span>
                       )}
                     </div>
-
-                    {/* Favorite / Mood Board Button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleLike(design);
-                      }}
-                      className={`p-2 rounded-full backdrop-blur-md transition-all active:scale-90 cursor-pointer ${isLiked
-                        ? 'bg-[#E63946] text-white shadow-md'
-                        : 'bg-black/40 text-white hover:bg-black/60'
-                        }`}
-                      aria-label="Add to favorites"
-                    >
-                      <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-white' : ''}`} />
-                    </button>
                   </div>
 
-                  {/* Hover Quick View Trigger */}
-                  <button
-                    onClick={() => onSelectDesign && onSelectDesign(design)}
-                    className="absolute inset-0 z-10 flex items-center justify-center bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs cursor-pointer text-white text-xs font-bold gap-1.5"
-                  >
-                    <Eye className="w-4 h-4 text-[#D4AF37]" />
-                    <span>Quick Zoom &amp; Details</span>
-                  </button>
+                  {/* Card Content Body */}
+                  <div className="p-2.5 sm:p-3.5 flex-1 flex flex-col justify-between space-y-2 bg-[#FFFDF9]">
+                    <div className="space-y-1">
+                      <h3 className="font-royal text-xs sm:text-sm font-bold text-[#4A151B] group-hover:text-[#8A3324] transition-colors line-clamp-1">
+                        {design.title}
+                      </h3>
+                      <p className="text-[10px] sm:text-xs text-[#8A3324]/85 line-clamp-1 font-medium">
+                        {design.subcategoryName || design.subCategory || design.complexity || 'Bespoke Art'}
+                      </p>
+                    </div>
 
-                  {/* Bottom Image Stats */}
-                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-[11px] text-white/90 z-10">
-                    <span className="flex items-center gap-1 font-medium bg-black/60 px-2 py-0.5 rounded backdrop-blur-xs">
-                      <Clock className="w-3 h-3 text-[#D4AF37]" />
-                      {design.duration}
-                    </span>
-                    <span className="font-royal font-bold text-[#D4AF37] bg-black/70 px-2 py-0.5 rounded backdrop-blur-xs">
-                      {design.priceEstimate}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Card Body */}
-                <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-                  <div className="space-y-1.5">
-                    <h3
-                      onClick={() => navigate(`/designs/${design.slug || design._id || design.id}`)}
-                      className="font-royal text-base font-bold text-[#4A151B] hover:text-[#8A3324] transition-colors cursor-pointer line-clamp-1"
-                    >
-                      {design.title}
-                    </h3>
-                    <p className="text-xs text-[#4A151B]/75 line-clamp-2 leading-relaxed">
-                      {design.description}
-                    </p>
-
-                    {/* Motifs preview */}
-                    {design.motifs && design.motifs.length > 0 && (
-                      <div className="flex flex-wrap gap-1 pt-1">
-                        {design.motifs.slice(0, 3).map((motif, i) => (
-                          <span
-                            key={i}
-                            className="px-2 py-0.5 rounded bg-[#F3ECE1] text-[10px] text-[#611C23] font-medium"
-                          >
-                            {motif}
-                          </span>
-                        ))}
-                        {design.motifs.length > 3 && (
-                          <span className="text-[10px] text-[#8A3324] font-bold self-center">
-                            +{design.motifs.length - 3}
+                    {/* Price and View Action Row */}
+                    <div className="pt-2 border-t border-[#D4AF37]/20 flex items-center justify-between gap-1">
+                      <div>
+                        {design.discountedPrice ? (
+                          <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
+                            <span className="font-royal font-bold text-xs sm:text-sm text-[#4A151B]">
+                              ₹{design.discountedPrice.toLocaleString('en-IN')}
+                            </span>
+                            <span className="text-[10px] sm:text-[11px] text-gray-400 line-through">
+                              ₹{design.price.toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="font-royal font-bold text-xs sm:text-sm text-[#4A151B]">
+                            {design.priceEstimate}
                           </span>
                         )}
                       </div>
-                    )}
-                  </div>
 
-                  {/* Action Buttons */}
-                  <div className="pt-3 border-t border-[#D4AF37]/20 flex items-center gap-2">
-                    <button
-                      onClick={() => navigate(`/designs/${design.slug || design._id || design.id}`)}
-                      className="flex-1 py-2 rounded-xl bg-white border border-[#D4AF37]/40 text-[#4A151B] hover:bg-[#F3ECE1] text-xs font-semibold transition-colors cursor-pointer flex items-center justify-center gap-1"
-                    >
-                      <span>View Details</span>
-                      <ArrowRight className="w-3 h-3 text-[#8A3324]" />
-                    </button>
-                    {/* <button
-                      onClick={() => onBookDesign && onBookDesign(design)}
-                      className="flex-1 py-2 rounded-xl bg-gradient-to-r from-[#4A151B] to-[#8A3324] text-[#FAF6F0] hover:brightness-110 text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                      <Sparkles className="w-3 h-3 text-[#D4AF37]" />
-                      <span>Book Look</span>
-                    </button> */}
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#F3ECE1] group-hover:bg-[#4A151B] text-[#8A3324] group-hover:text-[#D4AF37] flex items-center justify-center transition-colors shrink-0 shadow-xs">
+                        <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </motion.div>
       )}
     </div>
   );

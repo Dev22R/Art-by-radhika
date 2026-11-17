@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://artbyradhika-app.vercel.app/api' || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://artbyradhika-app.vercel.app/api';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -71,6 +71,22 @@ export const authService = {
   },
   logout: async () => {
     const response = await api.post('/auth/logout');
+    return response.data;
+  },
+  getCaptcha: async () => {
+    const response = await api.get('/auth/captcha');
+    return response.data;
+  },
+  forgotPassword: async (payload) => {
+    const response = await api.post('/auth/forgot-password', payload);
+    return response.data;
+  },
+  verifyForgotPasswordOtp: async (payload) => {
+    const response = await api.post('/auth/forgot-password/verify-otp', payload);
+    return response.data;
+  },
+  resetPassword: async (payload) => {
+    const response = await api.post('/auth/reset-password', payload);
     return response.data;
   },
 };
@@ -204,6 +220,20 @@ export const faqService = {
   },
   voteFaq: async (faqId, isHelpful = true) => {
     const response = await api.post(`/faqs/${faqId}/vote`, { isHelpful });
+    return response.data;
+  },
+};
+
+// Testimonial Service Endpoints
+export const testimonialService = {
+  getTestimonials: async (params = { page: 1, limit: 10, sort: 'latest' }) => {
+    const query = new URLSearchParams();
+    if (params.page) query.append('page', params.page);
+    if (params.limit) query.append('limit', params.limit);
+    if (params.sort) query.append('sort', params.sort);
+    const queryString = query.toString();
+    const url = `/testimonials${queryString ? `?${queryString}` : ''}`;
+    const response = await api.get(url);
     return response.data;
   },
 };

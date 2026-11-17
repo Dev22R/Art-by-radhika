@@ -5,6 +5,7 @@ import reelsReducer from './slices/reelsSlice';
 import categoryReducer from './slices/categorySlice';
 import designReducer from './slices/designSlice';
 import faqReducer from './slices/faqSlice';
+import testimonialReducer from './slices/testimonialSlice';
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     categories: categoryReducer,
     designs: designReducer,
     faqs: faqReducer,
+    testimonials: testimonialReducer,
   },
   devTools: process.env.NODE_ENV !== 'production',
 });

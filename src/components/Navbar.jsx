@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, Heart, Crown, User, LogOut } from 'lucide-react';
+import { Sparkles, Heart, Crown, User, LogOut, X } from 'lucide-react';
 import { logoutUser } from '../redux/slices/authSlice';
 import { toast } from 'sonner';
+import logo from '../../public/images/rp-dark-logo.png';
 
 export const Navbar = ({ onOpenEnquiry, favoritesCount, onOpenAuth }) => {
   const dispatch = useDispatch();
@@ -12,6 +13,7 @@ export const Navbar = ({ onOpenEnquiry, favoritesCount, onOpenAuth }) => {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,6 +22,23 @@ export const Navbar = ({ onOpenEnquiry, favoritesCount, onOpenAuth }) => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Lock scroll & handle ESC key when logo modal is open
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setIsLogoModalOpen(false);
+    };
+    if (isLogoModalOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isLogoModalOpen]);
 
   const navItems = [
     { id: 'home', path: '/', label: 'Home' },
@@ -40,44 +59,43 @@ export const Navbar = ({ onOpenEnquiry, favoritesCount, onOpenAuth }) => {
   };
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
-        isScrolled
-          ? 'glass-royal py-2.5 shadow-md border-b border-[#D4AF37]/30'
-          : 'bg-[#FAF6F0]/90 backdrop-blur-md py-3.5 border-b border-[#D4AF37]/15'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
-          {/* Brand Logo */}
-          <Link
-            to="/"
-            className="flex items-center gap-2.5 cursor-pointer group"
-          >
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#4A151B] to-[#8A3324] flex items-center justify-center text-[#D4AF37] shadow-md border border-[#D4AF37]/50 group-hover:rotate-12 transition-transform duration-300">
-              {/* Royal Mandala Icon */}
-              <svg
-                className="w-6 h-6 animate-spin-slow"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
+    <>
+      <header
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+          isScrolled
+            ? 'glass-royal py-2.5 shadow-md border-b border-[#D4AF37]/30'
+            : 'bg-[#FAF6F0]/90 backdrop-blur-md py-3.5 border-b border-[#D4AF37]/15'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            {/* Brand Logo */}
+            <Link
+              to="/"
+              className="flex items-center gap-2.5 cursor-pointer group"
+            >
+              <div
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsLogoModalOpen(true);
+                }}
+                title="Click to view logo"
+                className="w-13 h-13 sm:w-15 sm:h-15 rounded-full flex items-center justify-center text-[#D4AF37] shadow-md group-hover:scale-105 transition-all duration-300 cursor-pointer overflow-hidden border border-[#D4AF37]/40 p-0.5 bg-[#FAF6F0]"
               >
-                <circle cx="12" cy="12" r="3" stroke="currentColor" fill="#D4AF37" fillOpacity="0.2" />
-                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z" strokeOpacity="0.3" />
-                <path d="M12 5v14M5 12h14M7 7l10 10M7 17L17 7" strokeOpacity="0.6" />
-              </svg>
-            </div>
+                {/* Royal Mandala Icon */}
+                <img src={logo} alt="Art By Radhika Logo" className="w-full h-full object-cover rounded-full" />
+              </div>
 
-            <div>
-              <span className="font-royal text-lg sm:text-2xl font-bold tracking-wider text-[#4A151B] flex items-center gap-1">
-                Art-BY-<span className="text-[#D4AF37] font-serif-elegant italic text-xl sm:text-2xl font-semibold">radhika</span>
-              </span>
-              <p className="text-[10px] text-[#8A3324] font-medium tracking-widest uppercase -mt-1 hidden sm:block">
-                Royal Bridal &amp; Organic Henna Art
-              </p>
-            </div>
-          </Link>
+              <div>
+                <span className="font-royal text-lg sm:text-2xl font-bold tracking-wider text-[#4A151B] flex items-center gap-1">
+                  Art-BY-<span className="text-[#D4AF37] font-serif-elegant italic text-xl sm:text-2xl font-semibold">radhika</span>
+                </span>
+                <p className="text-[10px] text-[#8A3324] font-medium tracking-widest uppercase -mt-1 hidden sm:block">
+                  Royal Bridal &amp; Organic Henna Art
+                </p>
+              </div>
+            </Link>
 
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-1.5 lg:gap-2 bg-[#F3ECE1]/70 p-1.5 rounded-full border border-[#D4AF37]/25 shadow-inner">
@@ -172,5 +190,40 @@ export const Navbar = ({ onOpenEnquiry, favoritesCount, onOpenAuth }) => {
         </div>
       </div>
     </header>
+
+    {/* Enlarged Logo Modal */}
+    {isLogoModalOpen && (
+      <div
+        role="dialog"
+        aria-modal="true"
+        onClick={() => setIsLogoModalOpen(false)}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200"
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="relative flex flex-col items-center max-w-[90vw] max-h-[90vh]"
+        >
+          {/* Top Close Button */}
+          <button
+            type="button"
+            onClick={() => setIsLogoModalOpen(false)}
+            className="absolute -top-12 right-0 p-2 rounded-full bg-white/20 hover:bg-white/40 text-white backdrop-blur-md transition-all duration-200 shadow-lg cursor-pointer flex items-center justify-center border border-white/30 active:scale-95"
+            aria-label="Close Logo Modal"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+
+          {/* Logo Image View */}
+          <div className="rounded-3xl p-3 sm:p-6 bg-[#FAF6F0] border-2 border-[#D4AF37]/60 shadow-2xl overflow-hidden flex items-center justify-center">
+            <img
+              src={logo}
+              alt="Art By Radhika Full Logo"
+              className="w-auto h-auto max-w-[80vw] max-h-[70vh] sm:max-w-md sm:max-h-[75vh] object-contain rounded-2xl drop-shadow-md select-none"
+            />
+          </div>
+        </div>
+      </div>
+    )}
+  </>
   );
 };

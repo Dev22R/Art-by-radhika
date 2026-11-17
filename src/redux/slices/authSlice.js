@@ -106,6 +106,74 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
+export const fetchCaptcha = createAsyncThunk(
+  'auth/fetchCaptcha',
+  async (_, { rejectWithValue }) => {
+    try {
+      const data = await authService.getCaptcha();
+      return data;
+    } catch (error) {
+      const msg =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        'Failed to generate captcha';
+      return rejectWithValue(msg);
+    }
+  }
+);
+
+export const sendForgotPasswordOtp = createAsyncThunk(
+  'auth/sendForgotPasswordOtp',
+  async (payload, { rejectWithValue }) => {
+    try {
+      const data = await authService.forgotPassword(payload);
+      return data;
+    } catch (error) {
+      const msg =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        'Failed to verify captcha & send OTP';
+      return rejectWithValue(msg);
+    }
+  }
+);
+
+export const verifyResetOtp = createAsyncThunk(
+  'auth/verifyResetOtp',
+  async (payload, { rejectWithValue }) => {
+    try {
+      const data = await authService.verifyForgotPasswordOtp(payload);
+      return data;
+    } catch (error) {
+      const msg =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        'Invalid or expired OTP';
+      return rejectWithValue(msg);
+    }
+  }
+);
+
+export const resetUserPassword = createAsyncThunk(
+  'auth/resetUserPassword',
+  async (payload, { rejectWithValue }) => {
+    try {
+      const data = await authService.resetPassword(payload);
+      return data;
+    } catch (error) {
+      const msg =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        'Failed to reset password';
+      return rejectWithValue(msg);
+    }
+  }
+);
+
 // Initial state from localStorage
 const storedToken = localStorage.getItem('accessToken');
 const storedRefreshToken = localStorage.getItem('refreshToken');

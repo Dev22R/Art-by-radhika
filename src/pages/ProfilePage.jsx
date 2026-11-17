@@ -93,9 +93,10 @@ export const ProfilePage = ({
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'signup'
   const [showPassword, setShowPassword] = useState(false);
   const [authFormData, setAuthFormData] = useState({
+    name: '',
+    email: '',
     phone: '',
     password: '',
-    name: '',
   });
 
   // Edit Profile Form State
@@ -173,11 +174,25 @@ export const ProfilePage = ({
     }
 
     if (authMode === 'signup') {
+      const cleanName = authFormData.name.trim();
+      if (!cleanName) {
+        toast.error('Please enter your full name');
+        return;
+      }
+
+      const cleanEmail = authFormData.email.trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+        toast.error('Please enter a valid email address');
+        return;
+      }
+
       const payload = {
+        name: cleanName,
+        email: cleanEmail,
         phone: cleanPhone,
         password: authFormData.password,
       };
-      if (authFormData.name.trim()) payload.name = authFormData.name.trim();
 
       const res = await dispatch(signupUser(payload));
       if (signupUser.fulfilled.match(res)) {
@@ -460,7 +475,7 @@ export const ProfilePage = ({
                   </div>
 
                   {/* Sign Out Button in Header Card */}
-                  <button
+                  {/* <button
                     type="button"
                     onClick={() => setIsLogoutModalOpen(true)}
                     className="px-3 py-2 rounded-2xl bg-[#FAF6F0] hover:bg-[#8A3324]/10 text-[#8A3324] border border-[#D4AF37]/40 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold shrink-0 shadow-sm"
@@ -468,7 +483,7 @@ export const ProfilePage = ({
                   >
                     <LogOut className="w-4 h-4" />
                     <span className="hidden sm:inline">Sign Out</span>
-                  </button>
+                  </button> */}
                 </div>
               </div>
 
@@ -875,23 +890,43 @@ export const ProfilePage = ({
                   )}
 
                   {authMode === 'signup' && (
-                    <div>
-                      <label className="block text-xs font-bold text-[#4A151B] uppercase tracking-wider mb-1">
-                        Bride Full Name *
-                      </label>
-                      <div className="relative">
-                        <UserIcon className="w-4 h-4 text-[#8A3324] absolute left-3 top-3" />
-                        <input
-                          type="text"
-                          name="name"
-                          required
-                          value={authFormData.name}
-                          onChange={handleAuthChange}
-                          placeholder="e.g. Radhika Sharma"
-                          className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[#D4AF37]/40 bg-[#FAF6F0]/60 text-xs text-[#2C1810] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#8A3324]"
-                        />
+                    <>
+                      <div>
+                        <label className="block text-xs font-bold text-[#4A151B] uppercase tracking-wider mb-1">
+                          Bride Full Name *
+                        </label>
+                        <div className="relative">
+                          <UserIcon className="w-4 h-4 text-[#8A3324] absolute left-3 top-3" />
+                          <input
+                            type="text"
+                            name="name"
+                            required
+                            value={authFormData.name}
+                            onChange={handleAuthChange}
+                            placeholder="e.g. Radhika Sharma"
+                            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[#D4AF37]/40 bg-[#FAF6F0]/60 text-xs text-[#2C1810] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#8A3324]"
+                          />
+                        </div>
                       </div>
-                    </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-[#4A151B] uppercase tracking-wider mb-1">
+                          Email Address *
+                        </label>
+                        <div className="relative">
+                          <Mail className="w-4 h-4 text-[#8A3324] absolute left-3 top-3" />
+                          <input
+                            type="email"
+                            name="email"
+                            required
+                            value={authFormData.email}
+                            onChange={handleAuthChange}
+                            placeholder="e.g. user@example.com"
+                            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[#D4AF37]/40 bg-[#FAF6F0]/60 text-xs text-[#2C1810] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#8A3324]"
+                          />
+                        </div>
+                      </div>
+                    </>
                   )}
 
                   <div>
@@ -938,6 +973,16 @@ export const ProfilePage = ({
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
+                    {authMode === 'login' && (
+                      <div className="flex justify-end pt-1">
+                        <Link
+                          to="/captch-page"
+                          className="text-xs font-semibold text-[#8A3324] hover:text-[#4A151B] hover:underline transition-colors cursor-pointer"
+                        >
+                          Forgot Password?
+                        </Link>
+                      </div>
+                    )}
                   </div>
 
                   <button

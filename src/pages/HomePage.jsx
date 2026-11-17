@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
@@ -15,12 +15,12 @@ import {
 } from 'lucide-react';
 
 import {
-  DESIGNS_DATA,
   PRICING_PACKAGES,
-  TESTIMONIALS_DATA,
   STAIN_TIMELINE,
 } from '../data/mehndiData';
 import { fetchFaqs, voteFaqHelpful } from '../redux/slices/faqSlice';
+import { fetchDesigns } from '../redux/slices/designSlice';
+import { fetchTopTestimonials } from '../redux/slices/testimonialSlice';
 
 export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAuth }) => {
   const navigate = useNavigate();
@@ -29,6 +29,8 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
   const { faqs, loading: faqsLoading, votingFaqId, userVotes } = useSelector(
     (state) => state.faqs
   );
+  const { designs, loading: designsLoading } = useSelector((state) => state.designs);
+  const { topTestimonials, topLoading } = useSelector((state) => state.testimonials);
 
   const [selectedStainStage, setSelectedStainStage] = useState(2); // default to final dark stain
   const [faqOpenIndex, setFaqOpenIndex] = useState(0);
@@ -36,6 +38,23 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
   useEffect(() => {
     dispatch(fetchFaqs());
   }, [dispatch, isAuthenticated]);
+
+  useEffect(() => {
+    dispatch(fetchDesigns({ sort: 'latest' }));
+    dispatch(fetchTopTestimonials(3));
+  }, [dispatch]);
+
+  // Top 3 latest created designs
+  const latestDesigns = useMemo(() => {
+    if (!Array.isArray(designs) || designs.length === 0) return [];
+    return [...designs]
+      .sort((a, b) => {
+        const timeA = new Date(a.createdAt || a.raw?.createdAt || 0).getTime();
+        const timeB = new Date(b.createdAt || b.raw?.createdAt || 0).getTime();
+        return timeB - timeA;
+      })
+      .slice(0, 3);
+  }, [designs]);
 
   const handleVoteHelpful = async (faq) => {
     const faqId = faq._id || faq.id;
@@ -165,54 +184,7 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
               </div>
             </div>
 
-            {/* Hero Right Visual Card */}
-            <div className="lg:col-span-5 relative">
-              <div className="relative mx-auto max-w-md rounded-3xl p-3 bg-gradient-to-b from-[#D4AF37]/40 via-[#8A3324]/30 to-[#4A151B]/40 shadow-2xl">
-                <div className="relative rounded-2xl overflow-hidden bg-[#2A0C0E] aspect-[4/5] shadow-inner">
-                  <img
-                    src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80"
-                    alt="Royal Bridal Mehndi Art"
-                    className="w-full h-full object-cover object-center transform hover:scale-105 transition-transform duration-700"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1000&q=80';
-                    }}
-                  />
 
-                  {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1A0D0E] via-transparent to-black/20 pointer-events-none" />
-
-                  {/* Floating Guarantee Seal */}
-                  <div className="absolute top-4 right-4 glass-dark px-3 py-1.5 rounded-full border border-[#D4AF37]/50 text-white flex items-center gap-1.5 shadow-lg">
-                    <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
-                    <span className="text-[11px] font-bold text-[#D4AF37] tracking-wider uppercase">
-                      Dark Stain Guarantee
-                    </span>
-                  </div>
-
-                  {/* Bottom Card Info */}
-                  <div className="absolute bottom-4 left-4 right-4 glass-dark p-3.5 rounded-2xl border border-[#D4AF37]/30 text-white">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-[10px] uppercase font-bold text-[#D4AF37] tracking-widest block">
-                          Featured Signature
-                        </span>
-                        <h4 className="font-royal text-sm font-bold text-white">
-                          Padmavati Royal Rajwada
-                        </h4>
-                      </div>
-                      <button
-                        onClick={() => navigate('/reels')}
-                        className="px-3 py-1.5 rounded-lg bg-[#D4AF37] text-[#2A0C0E] font-bold text-xs hover:bg-[#F1DF96] transition-colors flex items-center gap-1 cursor-pointer"
-                      >
-                        <span>Watch Reel</span>
-                        <ArrowRight className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -232,48 +204,75 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {DESIGNS_DATA.slice(0, 3).map((design) => (
-            <div
-              key={design.id}
-              onClick={() => onSelectDesign(design)}
-              className="group bg-[#FFFDF9] rounded-2xl overflow-hidden border border-[#D4AF37]/30 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between"
-            >
-              <div className="relative aspect-[4/3] overflow-hidden bg-[#2A0C0E]">
-                <img
-                  src={design.image}
-                  alt={design.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = design.fallbackImage;
-                  }}
-                />
-                <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#1A0D0E]/80 backdrop-blur-md text-[11px] font-bold text-[#D4AF37] border border-[#D4AF37]/30">
-                  {design.style}
-                </span>
-                <span className="absolute bottom-3 right-3 px-2 py-0.5 rounded-md bg-white/90 text-[10px] font-bold text-[#4A151B]">
-                  {design.duration}
-                </span>
-              </div>
-
-              <div className="p-4 space-y-2">
-                <h3 className="font-royal text-lg font-bold text-[#4A151B] group-hover:text-[#8A3324] transition-colors">
-                  {design.title}
-                </h3>
-                <p className="text-xs text-[#4A151B]/75 line-clamp-2 leading-relaxed">
-                  {design.description}
-                </p>
-                <div className="pt-2 flex items-center justify-between border-t border-[#D4AF37]/20">
-                  <span className="font-royal font-bold text-[#4A151B] text-sm">
-                    {design.priceEstimate}
-                  </span>
-                  <span className="text-xs font-bold text-[#8A3324] flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                    View Details <ArrowRight className="w-3.5 h-3.5" />
-                  </span>
+          {designsLoading && latestDesigns.length === 0 ? (
+            [1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="bg-[#FFFDF9] rounded-2xl overflow-hidden border border-[#D4AF37]/30 shadow-sm animate-pulse flex flex-col justify-between"
+              >
+                <div className="aspect-[4/3] bg-[#4A151B]/10" />
+                <div className="p-4 space-y-3">
+                  <div className="h-5 bg-[#4A151B]/15 rounded w-3/4" />
+                  <div className="h-3 bg-[#4A151B]/10 rounded w-full" />
+                  <div className="h-3 bg-[#4A151B]/10 rounded w-2/3" />
+                  <div className="pt-2 flex justify-between border-t border-[#D4AF37]/20">
+                    <div className="h-4 bg-[#4A151B]/15 rounded w-1/4" />
+                    <div className="h-4 bg-[#4A151B]/15 rounded w-1/4" />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : latestDesigns.length > 0 ? (
+            latestDesigns.map((design) => {
+              const designSlug = design.slug || design._id || design.id;
+              return (
+                <div
+                  key={design.id || design._id}
+                  onClick={() => navigate(`/designs/${designSlug}`)}
+                  className="group bg-[#FFFDF9] rounded-2xl overflow-hidden border border-[#D4AF37]/30 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden bg-[#2A0C0E]">
+                    <img
+                      src={design.image}
+                      alt={design.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = design.fallbackImage || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=900&q=80';
+                      }}
+                    />
+                    {design.style && (
+                      <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#1A0D0E]/80 backdrop-blur-md text-[11px] font-bold text-[#D4AF37] border border-[#D4AF37]/30">
+                        {design.style}
+                      </span>
+                    )}
+                    {design.duration && (
+                      <span className="absolute bottom-3 right-3 px-2 py-0.5 rounded-md bg-white/90 text-[10px] font-bold text-[#4A151B]">
+                        {design.duration}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="p-4 space-y-2">
+                    <h3 className="font-royal text-lg font-bold text-[#4A151B] group-hover:text-[#8A3324] transition-colors">
+                      {design.title}
+                    </h3>
+                    <p className="text-xs text-[#4A151B]/75 line-clamp-2 leading-relaxed">
+                      {design.description}
+                    </p>
+                    <div className="pt-2 flex items-center justify-between border-t border-[#D4AF37]/20">
+                      <span className="font-royal font-bold text-[#4A151B] text-sm">
+                        {design.priceEstimate}
+                      </span>
+                      <span className="text-xs font-bold text-[#8A3324] flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                        View Details <ArrowRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : null}
         </div>
 
         <div className="text-center mt-8">
@@ -286,171 +285,9 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
         </div>
       </section>
 
-      {/* 3. Interactive Stain Transformation Simulator */}
-      <section className="bg-gradient-to-br from-[#2A0C0E] via-[#4A151B] to-[#1A0D0E] text-white py-12 sm:py-16 rounded-3xl mx-4 sm:mx-6 lg:mx-8 px-4 sm:px-8 border border-[#D4AF37]/30 shadow-2xl relative overflow-hidden">
-        <div className="max-w-4xl mx-auto text-center space-y-3 mb-8">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-xs font-bold uppercase tracking-wider">
-            <Flame className="w-3.5 h-3.5" />
-            <span>The Science of Royal Henna</span>
-          </div>
-          <h2 className="font-royal text-2xl sm:text-4xl font-bold text-[#FFFDF9]">
-            Natural Stain Oxidation Journey
-          </h2>
-          <p className="text-xs sm:text-sm text-[#F3ECE1]/80 max-w-xl mx-auto">
-            Our pure Sojat henna contains zero artificial dyes. Witness how body warmth transforms natural Lawsone into deep dark mahogany.
-          </p>
-        </div>
 
-        {/* 3 Interactive Buttons for Stages */}
-        <div className="flex justify-center gap-2 sm:gap-4 mb-8">
-          {STAIN_TIMELINE.map((item, idx) => (
-            <button
-              key={idx}
-              onClick={() => setSelectedStainStage(idx)}
-              className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
-                selectedStainStage === idx
-                  ? 'bg-[#D4AF37] text-[#2A0C0E] shadow-lg scale-105'
-                  : 'bg-white/10 hover:bg-white/20 text-white/80'
-              }`}
-            >
-              <span>{item.stage}</span>
-            </button>
-          ))}
-        </div>
 
-        {/* Selected Stage Detail Display */}
-        {(() => {
-          const current = STAIN_TIMELINE[selectedStainStage];
-          return (
-            <div className="glass-dark p-6 rounded-2xl border border-[#D4AF37]/40 max-w-2xl mx-auto text-left space-y-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-8 h-8 rounded-full border-2 border-[#D4AF37] shadow-inner"
-                  style={{ backgroundColor: current.color }}
-                />
-                <div>
-                  <h3 className="font-royal text-lg sm:text-xl font-bold text-[#FFFDF9]">
-                    {current.title}
-                  </h3>
-                  <span className="text-[11px] text-[#D4AF37] font-semibold">{current.stage}</span>
-                </div>
-              </div>
-
-              <p className="text-xs sm:text-sm text-[#FAF6F0]/90 leading-relaxed">
-                {current.description}
-              </p>
-
-              <div className="p-3 rounded-xl bg-black/40 border border-[#D4AF37]/25 text-xs text-[#D4AF37] flex items-start gap-2">
-                <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Master Tip:</strong> {current.tip}
-                </span>
-              </div>
-            </div>
-          );
-        })()}
-      </section>
-
-      {/* 4. Interactive Live Bridal Cost & Time Estimator */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="bg-[#FFFDF9] rounded-3xl p-6 sm:p-8 border-2 border-[#D4AF37]/40 shadow-xl space-y-6">
-          <div className="text-center space-y-2">
-            <span className="text-xs uppercase font-bold text-[#8A3324] tracking-widest block">
-              Transparent Planning
-            </span>
-            <h2 className="font-royal text-2xl sm:text-3xl font-bold text-[#4A151B]">
-              Henna Time &amp; Cost Estimator
-            </h2>
-            <p className="text-xs sm:text-sm text-[#4A151B]/80">
-              Calculate realistic timing and investment tailored to your bridal party requirements.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Options */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-[#4A151B] uppercase tracking-wider mb-2">
-                  Coverage Length
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'wrist', label: 'Wrist & Palms' },
-                    { id: 'forearm', label: 'Forearms Both Sides' },
-                    { id: 'full-elbow', label: 'Full Elbow Bridal' },
-                    { id: 'full-bridal-feet', label: 'Royal Arms + Feet' },
-                  ].map((cov) => (
-                    <button
-                      key={cov.id}
-                      type="button"
-                      onClick={() => setEstimatorCoverage(cov.id)}
-                      className={`p-2.5 rounded-xl text-xs font-semibold border transition-all text-left cursor-pointer ${
-                        estimatorCoverage === cov.id
-                          ? 'bg-[#4A151B] text-[#D4AF37] border-[#4A151B]'
-                          : 'bg-white text-[#4A151B] border-[#D4AF37]/30 hover:bg-[#F3ECE1]'
-                      }`}
-                    >
-                      {cov.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#4A151B] uppercase tracking-wider mb-2">
-                  Additional Guests / Bridesmaids Hands ({estimatorGuests - 1})
-                </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="15"
-                  value={estimatorGuests}
-                  onChange={(e) => setEstimatorGuests(parseInt(e.target.value))}
-                  className="w-full accent-[#8A3324] cursor-pointer"
-                />
-                <div className="flex justify-between text-[11px] text-[#8A3324] mt-1">
-                  <span>Bride only</span>
-                  <span>+5 Guests</span>
-                  <span>+14 Guests</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Estimated Output Result */}
-            <div className="p-6 rounded-2xl bg-[#F3ECE1] border border-[#D4AF37]/40 flex flex-col justify-between text-center md:text-left space-y-4">
-              <div>
-                <span className="text-xs uppercase font-bold text-[#8A3324] block mb-1">
-                  Estimated Total Investment
-                </span>
-                <div className="font-royal text-3xl sm:text-4xl font-extrabold text-[#4A151B]">
-                  {estimate.total}
-                </div>
-                <div className="text-xs text-[#8A3324] font-medium mt-1">
-                  Includes 100% Organic Cones, Sealant Mist &amp; Aftercare Balm
-                </div>
-              </div>
-
-              <div className="p-3 bg-white/80 rounded-xl border border-[#D4AF37]/20 flex items-center justify-between text-xs">
-                <span className="text-[#4A151B] font-semibold flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-[#8A3324]" />
-                  Application Duration:
-                </span>
-                <span className="font-bold text-[#4A151B]">{estimate.estHours}</span>
-              </div>
-
-              <button
-                onClick={onOpenEnquiry}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#4A151B] to-[#8A3324] text-[#FAF6F0] font-bold text-xs sm:text-sm hover:brightness-110 shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Crown className="w-4 h-4 text-[#D4AF37]" />
-                <span>Reserve This Package</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. Real Brides Love Stories */}
+      {/* 3. Real Brides Love Stories */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
           <span className="text-xs uppercase font-bold text-[#8A3324] tracking-widest block">
@@ -462,39 +299,92 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {TESTIMONIALS_DATA.map((t) => (
-            <div
-              key={t.id}
-              className="bg-[#FFFDF9] p-6 rounded-2xl border border-[#D4AF37]/30 shadow-sm flex flex-col justify-between space-y-4"
-            >
-              <div className="space-y-3">
+          {topLoading && topTestimonials.length === 0 ? (
+            [1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="bg-[#FFFDF9] p-6 rounded-2xl border border-[#D4AF37]/30 shadow-sm animate-pulse space-y-4"
+              >
                 <div className="flex gap-1">
-                  {[...Array(t.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 text-[#D4AF37] fill-[#D4AF37]" />
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="w-4 h-4 bg-[#D4AF37]/30 rounded-full" />
                   ))}
                 </div>
-                <p className="text-xs sm:text-sm text-[#4A151B]/85 italic leading-relaxed font-serif-elegant text-base">
-                  {t.text}
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-[#D4AF37]/20 flex items-center gap-3">
-                <img
-                  src={t.avatar}
-                  alt={t.bride}
-                  className="w-10 h-10 rounded-full object-cover border border-[#D4AF37]/50"
-                />
-                <div>
-                  <h4 className="font-royal text-sm font-bold text-[#4A151B]">{t.bride}</h4>
-                  <div className="text-[11px] text-[#8A3324]">{t.city}</div>
+                <div className="h-4 bg-gray-200 rounded w-full" />
+                <div className="h-4 bg-gray-200 rounded w-3/4" />
+                <div className="pt-3 border-t border-gray-100 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-200" />
+                  <div className="space-y-1">
+                    <div className="h-4 bg-gray-200 rounded w-24" />
+                    <div className="h-3 bg-gray-200 rounded w-16" />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : topTestimonials.length > 0 ? (
+            topTestimonials.map((t) => {
+              const avatarUrl =
+                t.avatar?.url ||
+                `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(t.name || 'Bride')}`;
+              const subtitle = [t.designation, t.company].filter(Boolean).join(' • ');
+
+              return (
+                <div
+                  key={t._id || t.id}
+                  className="bg-[#FFFDF9] p-6 rounded-2xl border border-[#D4AF37]/30 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow"
+                >
+                  <div className="space-y-3">
+                    <div className="flex gap-1">
+                      {[...Array(t.rating || 5)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 text-[#D4AF37] fill-[#D4AF37]" />
+                      ))}
+                    </div>
+                    <p className="text-xs sm:text-sm text-[#4A151B]/85 italic leading-relaxed font-serif-elegant">
+                      "{t.message}"
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t border-[#D4AF37]/20 flex items-center gap-3">
+                    <img
+                      src={avatarUrl}
+                      alt={t.name}
+                      className="w-10 h-10 rounded-full object-cover border border-[#D4AF37]/50"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(t.name || 'Bride')}`;
+                      }}
+                    />
+                    <div className="min-w-0">
+                      <h4 className="font-royal text-sm font-bold text-[#4A151B] truncate">
+                        {t.name}
+                      </h4>
+                      {subtitle && (
+                        <div className="text-[11px] text-[#8A3324] truncate">
+                          {subtitle}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : null}
+        </div>
+
+        {/* View All Button */}
+        <div className="text-center mt-8">
+          <button
+            type="button"
+            onClick={() => navigate('/art-by-radhika-user-feedbacks')}
+            className="px-6 py-2.5 rounded-full border border-[#8A3324] text-[#8A3324] hover:bg-[#8A3324] hover:text-white font-bold text-xs sm:text-sm transition-colors cursor-pointer inline-flex items-center gap-2"
+          >
+            <span>View All Bride Stories &amp; Feedbacks</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       </section>
 
-      {/* 6. Frequently Asked Questions Accordion */}
+      {/* 4. Frequently Asked Questions Accordion */}
       <section className="max-w-3xl mx-auto px-4 sm:px-6">
         <div className="text-center space-y-2 mb-8">
           <span className="text-xs uppercase font-bold text-[#8A3324] tracking-widest block">
@@ -543,9 +433,8 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
                       {faq.question || faq.q}
                     </span>
                     <ChevronDown
-                      className={`w-4 h-4 text-[#8A3324] transition-transform duration-300 ${
-                        isOpen ? 'rotate-180' : ''
-                      }`}
+                      className={`w-4 h-4 text-[#8A3324] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''
+                        }`}
                     />
                   </button>
 
@@ -562,16 +451,14 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
                             e.stopPropagation();
                             handleVoteHelpful(faq);
                           }}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold transition-all cursor-pointer border ${
-                            hasVoted
-                              ? 'bg-[#4A151B] text-[#FFFDF9] border-[#4A151B] shadow-xs'
-                              : 'bg-[#FAF6F0] hover:bg-[#F3ECE1] text-[#4A151B] border-[#D4AF37]/40 hover:border-[#D4AF37]'
-                          } ${votingFaqId === faqId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold transition-all cursor-pointer border ${hasVoted
+                            ? 'bg-[#4A151B] text-[#FFFDF9] border-[#4A151B] shadow-xs'
+                            : 'bg-[#FAF6F0] hover:bg-[#F3ECE1] text-[#4A151B] border-[#D4AF37]/40 hover:border-[#D4AF37]'
+                            } ${votingFaqId === faqId ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                           <ThumbsUp
-                            className={`w-3.5 h-3.5 ${
-                              hasVoted ? 'text-[#D4AF37] fill-[#D4AF37]' : 'text-[#8A3324]'
-                            }`}
+                            className={`w-3.5 h-3.5 ${hasVoted ? 'text-[#D4AF37] fill-[#D4AF37]' : 'text-[#8A3324]'
+                              }`}
                           />
                           <span>{hasVoted ? 'Helpful' : 'Yes'}</span>
                           {faq.helpfulCount !== undefined && faq.helpfulCount !== null && (
@@ -588,7 +475,7 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
         </div>
       </section>
 
-      {/* 7. Bottom Grand Banner */}
+      {/* 5. Bottom Grand Banner */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="rounded-3xl bg-gradient-to-r from-[#4A151B] via-[#611C23] to-[#8A3324] p-8 sm:p-12 text-center text-white border-2 border-[#D4AF37]/50 shadow-2xl space-y-6 relative overflow-hidden">
           <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-[#D4AF37]/10 rounded-full blur-2xl pointer-events-none" />

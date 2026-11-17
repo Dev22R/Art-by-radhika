@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { X, Lock, Phone, User, Mail, Sparkles, Eye, EyeOff, Crown, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { loginUser, signupUser, clearAuthError } from '../redux/slices/authSlice';
 import { toast } from 'sonner';
 
 export const AuthModal = ({ isOpen, onClose, initialMode = 'login', onSuccess }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { loading, error } = useSelector((state) => state.auth);
 
   const [mode, setMode] = useState(initialMode); // 'login' | 'signup'
@@ -14,6 +16,7 @@ export const AuthModal = ({ isOpen, onClose, initialMode = 'login', onSuccess })
   // Form Fields
   const [formData, setFormData] = useState({
     name: '',
+    email: '',
     phone: '',
     password: '',
   });
@@ -43,11 +46,25 @@ export const AuthModal = ({ isOpen, onClose, initialMode = 'login', onSuccess })
     }
 
     if (mode === 'signup') {
+      const cleanName = formData.name.trim();
+      if (!cleanName) {
+        toast.error('Please enter your full name');
+        return;
+      }
+
+      const cleanEmail = formData.email.trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+        toast.error('Please enter a valid email address');
+        return;
+      }
+
       const signupPayload = {
+        name: cleanName,
+        email: cleanEmail,
         phone: cleanPhone,
         password: formData.password,
       };
-      if (formData.name.trim()) signupPayload.name = formData.name.trim();
 
       const result = await dispatch(signupUser(signupPayload));
       if (signupUser.fulfilled.match(result)) {
@@ -146,25 +163,45 @@ export const AuthModal = ({ isOpen, onClose, initialMode = 'login', onSuccess })
             </div>
           )}
 
-          {/* Name (for signup) */}
+          {/* Name & Email (for signup) */}
           {mode === 'signup' && (
-            <div>
-              <label className="block text-xs font-bold text-[#4A151B] uppercase tracking-wider mb-1">
-                Bride Full Name *
-              </label>
-              <div className="relative">
-                <User className="w-4 h-4 text-[#8A3324] absolute left-3 top-3.5" />
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="e.g. Radhika Sharma"
-                  className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[#D4AF37]/40 bg-[#FAF6F0]/60 text-xs text-[#2C1810] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#8A3324]"
-                />
+            <>
+              <div>
+                <label className="block text-xs font-bold text-[#4A151B] uppercase tracking-wider mb-1">
+                  Bride Full Name *
+                </label>
+                <div className="relative">
+                  <User className="w-4 h-4 text-[#8A3324] absolute left-3 top-3.5" />
+                  <input
+                    type="text"
+                    name="name"
+                    required
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="e.g. Radhika Sharma"
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[#D4AF37]/40 bg-[#FAF6F0]/60 text-xs text-[#2C1810] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#8A3324]"
+                  />
+                </div>
               </div>
-            </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#4A151B] uppercase tracking-wider mb-1">
+                  Email Address *
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-[#8A3324] absolute left-3 top-3.5" />
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="e.g. user@example.com"
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[#D4AF37]/40 bg-[#FAF6F0]/60 text-xs text-[#2C1810] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#8A3324]"
+                  />
+                </div>
+              </div>
+            </>
           )}
 
           {/* Phone Number */}
@@ -214,6 +251,20 @@ export const AuthModal = ({ isOpen, onClose, initialMode = 'login', onSuccess })
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            {mode === 'login' && (
+              <div className="flex justify-end pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    navigate('/captch-page');
+                  }}
+                  className="text-xs font-semibold text-[#8A3324] hover:text-[#4A151B] hover:underline transition-colors cursor-pointer"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}

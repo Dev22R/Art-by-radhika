@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { designService } from '../../services/api';
+import fallbackImage from '../../../public/images/rp-dark-logo.png'
 
 // Helper to normalize design objects from API responses into a clean UI format
 export const normalizeDesign = (item) => {
@@ -16,7 +17,7 @@ export const normalizeDesign = (item) => {
     (typeof item.image === 'string' ? item.image : item.image?.url) ||
     item.imageUrl ||
     item.thumbnail ||
-    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=900&q=80';
+    {fallbackImage};
 
   const categoryName =
     typeof item.categoryId === 'object' && item.categoryId?.name
@@ -81,7 +82,11 @@ export const normalizeDesign = (item) => {
 
   const priceEstimate =
     item.priceEstimate ||
-    (priceVal ? `₹${priceVal.toLocaleString('en-IN')}` : discountedPriceVal ? `₹${discountedPriceVal.toLocaleString('en-IN')}` : '₹4,999');
+    (discountedPriceVal
+      ? `₹${discountedPriceVal.toLocaleString('en-IN')}`
+      : priceVal
+      ? `₹${priceVal.toLocaleString('en-IN')}`
+      : '₹4,999');
 
   const likesCount =
     typeof item.likeCount === 'number'
@@ -94,6 +99,13 @@ export const normalizeDesign = (item) => {
       ? item.likes.length
       : 0;
 
+  const videoObj =
+    typeof item.video === 'string'
+      ? { url: item.video }
+      : item.video && typeof item.video === 'object' && item.video.url
+      ? item.video
+      : null;
+
   return {
     id: item._id || item.id || `des-${Math.random().toString(36).substring(2, 9)}`,
     _id: item._id || item.id,
@@ -104,12 +116,14 @@ export const normalizeDesign = (item) => {
     categoryName,
     subcategory: subcategorySlug,
     subcategoryName,
+    subCategory: subcategoryName || item.subCategory || '',
     style: item.style || categoryName || 'Heritage Rajwada',
     image: coverImage,
     coverImage,
     images: imagesList.length > 0 ? imagesList : [{ url: coverImage }],
-    video: item.video || null,
-    fallbackImage: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=900&q=80',
+    video: videoObj,
+    videoUrl: videoObj?.url || null,
+    fallbackImage: fallbackImage,
     description:
       item.description ||
       'Intricate, bespoke royal mehndi pattern handcrafted with natural organic henna.',
@@ -117,7 +131,7 @@ export const normalizeDesign = (item) => {
     estimatedTime: item.estimatedTime || item.duration || '3 - 4 Hours',
     stainDepth: item.stainDepth || 'Deep Mahogany Dark (48-72h)',
     complexity: item.complexity || item.density || 'Royal Heavy',
-    placement: Array.isArray(item.placement) ? item.placement : item.hands ? [item.hands] : ['Full Arm'],
+    placement: Array.isArray(item.placement) ? item.placement : item.hands ? [item.hands] : ['full_arm'],
     hands: item.hands || (Array.isArray(item.placement) ? item.placement.join(', ') : 'Full Arm'),
     priceEstimate,
     price: priceVal || discountedPriceVal || 4999,
@@ -134,6 +148,7 @@ export const normalizeDesign = (item) => {
     tags: motifs,
     trending: !!item.isTrending || !!item.trending || !!item.isFeatured,
     isFeatured: !!item.isFeatured,
+    createdAt: item.createdAt || null,
     raw: item,
   };
 };
@@ -172,12 +187,32 @@ export const fetchDesigns = createAsyncThunk(
 // Fetch a single design by slug or ID
 export const fetchDesignBySlug = createAsyncThunk(
   'designs/fetchDesignBySlug',
-  async (slugOrId, { rejectWithValue }) => {
+  async (slugOrId, { getState, rejectWithValue }) => {
     try {
       const res = await designService.getDesignBySlug(slugOrId);
       const rawItem = res.data?.design || res.design || res.data || res;
-      return normalizeDesign(rawItem);
+      const rawRelated = res.data?.relatedDesigns || res.relatedDesigns || [];
+      const normalizedDesign = normalizeDesign(rawItem);
+      const normalizedRelated = Array.isArray(rawRelated)
+        ? rawRelated.map(normalizeDesign).filter(Boolean)
+        : [];
+
+      return {
+        design: normalizedDesign,
+        relatedDesigns: normalizedRelated,
+      };
     } catch (error) {
+      // Check if design is already loaded in Redux store as fallback
+      const state = getState();
+      const existing = (state.designs?.designs || []).find(
+        (d) => d.slug === slugOrId || d._id === slugOrId || d.id === slugOrId
+      );
+      if (existing) {
+        return {
+          design: existing,
+          relatedDesigns: [],
+        };
+      }
       const msg =
         error.response?.data?.message ||
         error.response?.data?.error ||
@@ -205,6 +240,7 @@ export const toggleLikeDesign = createAsyncThunk(
 const initialState = {
   designs: [],
   currentDesign: null,
+  relatedDesigns: [],
   loading: false,
   detailLoading: false,
   error: null,
@@ -272,7 +308,8 @@ export const designSlice = createSlice({
       })
       .addCase(fetchDesignBySlug.fulfilled, (state, action) => {
         state.detailLoading = false;
-        state.currentDesign = action.payload;
+        state.currentDesign = action.payload?.design || action.payload;
+        state.relatedDesigns = action.payload?.relatedDesigns || [];
       })
       .addCase(fetchDesignBySlug.rejected, (state) => {
         state.detailLoading = false;
