@@ -197,3 +197,27 @@
   top: 10px !important;
   right: 10px !important;
 }
+
+
+/* Chrome & Edge Date Input Visibility Fix */
+input[type="date"] {
+  color: #4A151B !important; /* Force text color */
+}
+
+input[type="date"]::-webkit-datetime-edit,
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  color: #4A151B !important; 
+  display: flex !important; /* Ensures the text doesn't collapse */
+}
+
+/* Calendar Icon ko clearly dikhane ke liye */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 1;
+  display: block;
+  cursor: pointer;
+  /* Agar icon ka color dark brown chahiye toh filter use kar sakte hain */
+  filter: invert(15%) sepia(20%) saturate(1500%) hue-rotate(320deg) brightness(90%) contrast(90%);
+}

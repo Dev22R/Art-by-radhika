@@ -5,24 +5,18 @@ import { toast } from 'sonner';
 import {
   Sparkles,
   Crown,
-  Clock,
   ArrowRight,
-  ShieldCheck,
   ChevronDown,
   Star,
-  Flame,
   ThumbsUp,
 } from 'lucide-react';
 
-import {
-  PRICING_PACKAGES,
-  STAIN_TIMELINE,
-} from '../data/mehndiData';
 import { fetchFaqs, voteFaqHelpful } from '../redux/slices/faqSlice';
 import { fetchDesigns } from '../redux/slices/designSlice';
 import { fetchTopTestimonials } from '../redux/slices/testimonialSlice';
+import HennaEstimatorWidget from '../components/HennaEstimatorWidget';
 
-export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAuth }) => {
+export const HomePage = ({ onOpenEnquiry, onOpenAuth }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -32,7 +26,6 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
   const { designs, loading: designsLoading } = useSelector((state) => state.designs);
   const { topTestimonials, topLoading } = useSelector((state) => state.testimonials);
 
-  const [selectedStainStage, setSelectedStainStage] = useState(2); // default to final dark stain
   const [faqOpenIndex, setFaqOpenIndex] = useState(0);
 
   useEffect(() => {
@@ -86,27 +79,6 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
     }
   };
 
-  // Interactive Estimator state
-  const [estimatorCoverage, setEstimatorCoverage] = useState('full-elbow');
-  const [estimatorOccasion, setEstimatorOccasion] = useState('bridal');
-  const [estimatorGuests, setEstimatorGuests] = useState(1);
-
-  // Calculate quick estimate
-  const calculateEstimate = () => {
-    let base = 5000;
-    if (estimatorCoverage === 'wrist') base = 2500;
-    if (estimatorCoverage === 'forearm') base = 6500;
-    if (estimatorCoverage === 'full-elbow') base = 12500;
-    if (estimatorCoverage === 'full-bridal-feet') base = 18000;
-
-    const guestCost = (estimatorGuests - 1) * 800;
-    const total = base + guestCost;
-    const estHours = estimatorCoverage === 'full-bridal-feet' ? '5 - 6 Hours' : '3 - 4 Hours';
-    return { total: `₹${total.toLocaleString()}`, estHours };
-  };
-
-  const estimate = calculateEstimate();
-
   return (
     <div className="space-y-16 sm:space-y-24 pb-16">
       {/* 1. Regal Hero Section */}
@@ -156,7 +128,7 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
                   className="w-full sm:w-auto px-6 py-3.5 rounded-full bg-white/80 hover:bg-white text-[#4A151B] font-bold text-sm border border-[#D4AF37]/50 transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4 text-[#D4AF37]" />
-                  <span>Explore 200+ Designs</span>
+                  <span>Explore Designs</span>
                 </button>
               </div>
 
@@ -384,6 +356,9 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
         </div>
       </section>
 
+      {/* Henna Time & Cost Estimator Widget */}
+      <HennaEstimatorWidget />
+
       {/* 4. Frequently Asked Questions Accordion */}
       <section className="max-w-3xl mx-auto px-4 sm:px-6">
         <div className="text-center space-y-2 mb-8">
@@ -476,7 +451,7 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
       </section>
 
       {/* 5. Bottom Grand Banner */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="rounded-3xl bg-gradient-to-r from-[#4A151B] via-[#611C23] to-[#8A3324] p-8 sm:p-12 text-center text-white border-2 border-[#D4AF37]/50 shadow-2xl space-y-6 relative overflow-hidden">
           <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-[#D4AF37]/10 rounded-full blur-2xl pointer-events-none" />
 
@@ -507,7 +482,7 @@ export const HomePage = ({ setActiveTab, onOpenEnquiry, onSelectDesign, onOpenAu
             </button>
           </div>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 };

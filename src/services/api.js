@@ -238,4 +238,44 @@ export const testimonialService = {
   },
 };
 
+// Estimator Service Endpoints
+export const estimatorService = {
+  getConfig: async () => {
+    try {
+      const response = await api.get('/v1/estimator/config');
+      return response.data;
+    } catch (err) {
+      if (err.response?.status === 404) {
+        const response = await api.get('/estimator/config');
+        return response.data;
+      }
+      throw err;
+    }
+  },
+  calculate: async (payload) => {
+    try {
+      const response = await api.post('/v1/estimator/calculate', payload);
+      return response.data;
+    } catch (err) {
+      if (err.response?.status === 404) {
+        const response = await api.post('/estimator/calculate', payload);
+        return response.data;
+      }
+      throw err;
+    }
+  },
+  submitEnquiry: async (payload) => {
+    try {
+      const response = await api.post('/v1/estimator/enquiry', payload);
+      return response.data;
+    } catch (err) {
+      if (err.response?.status === 404) {
+        const response = await api.post('/estimator/enquiry', payload);
+        return response.data;
+      }
+      throw err;
+    }
+  },
+};
+
 export default api;
